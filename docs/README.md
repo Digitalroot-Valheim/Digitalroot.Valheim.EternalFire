@@ -1,32 +1,14 @@
-Structuring your Thunderstore package
-https://github.com/ebkr/r2modmanPlus/wiki/Structuring-your-Thunderstore-package
+# Eternal Fire
 
-Manifest V1 (Thunderstore) + author field
-https://github.com/ebkr/r2modmanPlus/wiki/Installing-mods-locally#manifest-v1-thunderstore--author-field
+## Summary
 
-
-Move me to [gitrepo]/doc
-
-# Summary
-This is a port of <a href="https://www.nexusmods.com/valheim/mods/0000">ModTemplate</a> to JVL   
-PR: https://github.com/Atokal/AtosArrows/pull/3   
-Assets belong to <a href="https://github.com/Atokal" target="_blank">Atokal</a> and are used with permission because of:   
-- Asset use permission You are allowed to use the assets in this file without permission or crediting me. https://www.nexusmods.com/valheim/mods/969 (June 12, 2021)
- 
-Original Mod: https://www.nexusmods.com/valheim/mods/969
-
-**Code is a complete rewrite.**
+Keeps fires burning.
 
 ## License
-Original source has no license.   
-JVL Version is released under: **GNU Affero General Public License v3.0**
+**GNU Affero General Public License v3.0**
 
-## ModTemplate
-Adds several new arrows into the game. Expands arrow progression for fighting tougher enemies! 
-
-New Items:
-- Stone Arrow
-- Blunted Arrow
+## Details
+Keeps fires lit and burning without needing to fuel them. 
 
 ### Dependencies
 - <a href="https://valheim.thunderstore.io/package/denikson/BepInExPack_Valheim/"  target="_blank">BepInExPack Valheim</a>
@@ -37,17 +19,33 @@ New Items:
 1. Extract the archive into &lt;Steam Location&gt;\steamapps\common\Valheim\BepInEx\plugins
 
 ### Configuration 
-- No need to configure.
+
+| Config                          | Category          | Data Type | Desc                                      |
+| ---                             | ---               | ---       | ---                                       |
+| Campfire                        | Fireplaces        | bool      | Enable Campfire                           |
+| Bonfire                         | Fireplaces        | bool      | Enable Bonfire                            |
+| Sconce                          | Fireplaces        | bool      | Enable Sconce                             |
+| StandingWoodTorch               | Fireplaces        | bool      | Enable Standing Wood Torch                |
+| StandingIronTorch               | Fireplaces        | bool      | Enable Standing Iron Torch                |
+| StandingGreenBurningIronTorch   | Fireplaces        | bool      | Enable Standing Green Burning Iron Torch  |
+| StandingBlueBurningIronTorch    | Fireplaces        | bool      | Enable Standing Blue Burning Iron Torch   |
+| StandingBrazier                 | Fireplaces        | bool      | Enable Standing Brazier                   |
+| HangingBrazier                  | Fireplaces        | bool      | Enable Hanging Brazier                    |
+| Hearth                          | Fireplaces        | bool      | Enable Hearth                             |
+| HotTub                          | Fireplaces        | bool      | Enable Hot Tub                            |
+| JackOTurnip                     | Fireplaces        | bool      | Enable Jack O' Turnip                     |
+| StoneOven                       | Cooking Stations  | bool      | Enable Stone Oven                         |
+| Smelter                         | Smelters          | bool      | Enable Smelter                            |
+| BlastFurnace                    | Smelters          | bool      | Enable Blast Furnace                      |
+| EitrRefinery                    | Smelters          | bool      | Enable Eitr Refinery                      |
+| CustomPrefabs                   | Custom            | string    | A comma-separated list of prefab names    |
 
 ### Issues/Questions/Bugs
 - Use the repo issues tab above.
 
 ### Support Me @ https://www.buymeacoffee.com/digitalroot
-
-### Thanks to 
-- <a href="https://github.com/Atokal" target="_blank">Atokal</a>
-
+<br />
 <p align="center">
-<b>Digitalroot can be found in the Odin Plus Team Discord</b><br />
-  <a href="https://discord.gg/BHbTumqG7U" target="_blank"><img src="https://digitalroot.net/img/odinplusdisc.png"></a>
+<b>Digitalroot can be found in the Valhalla Legends Discord</b><br /><br />
+  <a href="https://discord.gg/SsMW3rm67u" target="_blank"><img src="https://digitalroot.net/img/vl/vl_logo_125x154.png"></a>
 </p>
