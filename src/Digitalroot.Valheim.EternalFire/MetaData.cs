@@ -7,7 +7,7 @@ namespace Digitalroot.Valheim.EternalFire
   {
     public const string Version = "0.0.1";
     public const string Name = "Eternal Fire";
-    public const string Guid = "digitalroot.mods.eternalFire";
-    public const string Namespace = "Digitalroot.Valheim" + nameof(Digitalroot.Valheim.EternalFire);
+    public const string Guid = "digitalroot.mods.eternalfire";
+    public const string Namespace = "Digitalroot.Valheim" + nameof(EternalFire);
   }
 }
