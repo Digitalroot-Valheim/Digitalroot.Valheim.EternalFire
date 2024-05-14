@@ -28,7 +28,7 @@
       https://digitalroot-valheim-nuget.s3.us-west-2.amazonaws.com/index.json
     </RestoreAdditionalProjectSources>
     <VersionPrefix>0.0.1</VersionPrefix>
-    <Configurations>Debug;Release;DebugNoDeploy</Configurations>
+    <Configurations>Debug;Release</Configurations>
   </PropertyGroup>
 
   <ItemGroup>
