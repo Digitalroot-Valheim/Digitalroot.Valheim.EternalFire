@@ -6,7 +6,7 @@
   "version_number": "%VERSION_NUMBER%",
   "dependencies": [
     "denikson-BepInExPack_Valheim-5.4.2202",
-    "ValheimModding-Jotunn-2.16.1"
+    "ValheimModding-Jotunn-2.19.4"
   ],
   "website_url": "https://github.com/Digitalroot-Valheim/Digitalroot.Valheim.EternalFire"
 }

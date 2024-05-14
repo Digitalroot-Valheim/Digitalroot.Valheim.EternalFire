@@ -9,7 +9,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".github", ".github", "{53F5
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "worklfows", "worklfows", "{1A2C7529-FAA6-4705-9AD2-363DD17D6268}"
 	ProjectSection(SolutionItems) = preProject
-		..\.github\workflows\discord.yml = ..\.github\workflows\discord.yml
 		..\.github\workflows\nuget.autoupdate.yml = ..\.github\workflows\nuget.autoupdate.yml
 		..\.github\workflows\release.yml = ..\.github\workflows\release.yml
 	EndProjectSection
@@ -26,6 +25,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		..\LICENSE = ..\LICENSE
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UnitTests", "UnitTests\UnitTests.csproj", "{EB5C1C0E-D696-44A5-B7F8-CA4CC95CE486}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,6 +40,12 @@ Global
 		{73CF24C1-0509-43B3-A72B-90720901BF76}.DebugNoDeploy|Any CPU.Build.0 = DebugNoDeploy|Any CPU
 		{73CF24C1-0509-43B3-A72B-90720901BF76}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{73CF24C1-0509-43B3-A72B-90720901BF76}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EB5C1C0E-D696-44A5-B7F8-CA4CC95CE486}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EB5C1C0E-D696-44A5-B7F8-CA4CC95CE486}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EB5C1C0E-D696-44A5-B7F8-CA4CC95CE486}.DebugNoDeploy|Any CPU.ActiveCfg = Debug|Any CPU
+		{EB5C1C0E-D696-44A5-B7F8-CA4CC95CE486}.DebugNoDeploy|Any CPU.Build.0 = Debug|Any CPU
+		{EB5C1C0E-D696-44A5-B7F8-CA4CC95CE486}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EB5C1C0E-D696-44A5-B7F8-CA4CC95CE486}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
