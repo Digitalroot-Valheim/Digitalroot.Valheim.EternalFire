@@ -38,10 +38,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="FodyWeavers.xsd" />
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="BepInEx.Core" Version="[5.4.21]">
       <PrivateAssets>all</PrivateAssets>
       <ExcludeAssets>runtime</ExcludeAssets>
@@ -54,17 +50,17 @@
       <ExcludeAssets>runtime</ExcludeAssets>
       <IncludeAssets>compile; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Digitalroot.Valheim.Common.Log" Version="1.1.52" />
-    <PackageReference Include="Digitalroot.Valheim.Common.Names" Version="1.4.28">
+    <PackageReference Include="Digitalroot.Valheim.Common.Log" Version="1.1.53" />
+    <PackageReference Include="Digitalroot.Valheim.Common.Names" Version="1.4.29">
       <IncludeAssets></IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Digitalroot.Valheim.Common.References" Version="0.218.14">
+    <PackageReference Include="Digitalroot.Valheim.Common.References" Version="0.218.15">
       <PrivateAssets>all</PrivateAssets>
       <ExcludeAssets>runtime</ExcludeAssets>
       <IncludeAssets>compile; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Digitalroot.Valheim.Common.Utils" Version="1.0.62" />
-    <PackageReference Include="Digitalroot.Valheim.References.JvL" Version="2.19.4" />
+    <PackageReference Include="Digitalroot.Valheim.Common.Utils" Version="1.0.63" />
+    <PackageReference Include="Digitalroot.Valheim.References.JvL" Version="2.20.0" />
     <PackageReference Include="ErrorProne.NET.CoreAnalyzers" Version="0.1.2">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
