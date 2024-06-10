@@ -15,7 +15,7 @@ namespace Digitalroot.Valheim.EternalFire
 {
   [BepInPlugin(Guid, Name, Version)]
   [BepInDependency(Jotunn.Main.ModGuid, "2.11.5")]
-  [NetworkCompatibility(CompatibilityLevel.EveryoneMustHaveMod, VersionStrictness.Minor)]
+  [NetworkCompatibility(CompatibilityLevel.ServerMustHaveMod, VersionStrictness.Minor)]
   [SuppressMessage("ReSharper", "MemberCanBePrivate.Global")]
   public partial class Main : BaseUnityPlugin, ITraceableLogging
   {
