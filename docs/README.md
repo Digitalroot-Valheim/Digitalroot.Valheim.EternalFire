@@ -40,6 +40,16 @@ Keeps fires lit and burning without needing to fuel them.
 | EitrRefinery                    | Smelters          | bool      | Enable Eitr Refinery                      |
 | CustomPrefabs                   | Custom            | string    | A comma-separated list of prefab names    |
 
+###### Add to server to enforce configs. 
+
+### Crossplay :heavy_check_mark:
+| Point of View            | Server w/ Mod      | Server w/o Mod     | Client (PC) w/ mod | Client (PC/Console) w/o mod |
+| ---                      | ---                | ---                | ---                | ---                         |
+| Client (PC) w/ mod       | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark:          |
+| Client (Console) w/o mod | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark:          |
+| Server w/ Mod            | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark:          |
+| Server w/o Mod           | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark:          |
+
 ### Issues/Questions/Bugs
 - Use the repo issues tab above.
 
