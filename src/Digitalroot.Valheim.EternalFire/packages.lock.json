@@ -26,20 +26,20 @@
       },
       "Digitalroot.Valheim.Common.Log": {
         "type": "Direct",
-        "requested": "[1.1.53, )",
-        "resolved": "1.1.53",
-        "contentHash": "VYKplEKfk0NkkyNnjSrEf+RfMwphb7C5dU0eM5xdDcTLFRmacl2GbyLMIe6ugQiHwtTiFmXom5L+Ucu2tThldQ==",
+        "requested": "[1.1.54, )",
+        "resolved": "1.1.54",
+        "contentHash": "LTZZsd3Ly+FaAoARVxb7oGRldAWzslsOVG4lGiCdwzj3Cv0aMmFLAIpykqtclPX7P3yy+GDqEuttbuK/asX4Og==",
         "dependencies": {
-          "Digitalroot.Valheim.Common.Json": "1.0.41"
+          "Digitalroot.Valheim.Common.Json": "1.0.42"
         }
       },
       "Digitalroot.Valheim.Common.Names": {
         "type": "Direct",
-        "requested": "[1.4.33, )",
-        "resolved": "1.4.33",
-        "contentHash": "xi+M9Y8TSD1tAHSvq4pOudTTt/tFZz6ByRHH8FSmEvflmr0f9+wiAiHf//x0LofpdpqoYtQN0U2DO/Nt8ikW/g==",
+        "requested": "[1.4.34, )",
+        "resolved": "1.4.34",
+        "contentHash": "uQ6SdP9Y0b/ssLyCGJUvLelLq3XRBUPbPTcSBk4NQXv0D6oSdsrd+95K3tN86E5XJFeNRGviZZPfSJWbq7sRmQ==",
         "dependencies": {
-          "Digitalroot.Valheim.Common.Utils": "1.0.63"
+          "Digitalroot.Valheim.Common.Utils": "1.0.64"
         }
       },
       "Digitalroot.Valheim.Common.References": {
@@ -50,11 +50,11 @@
       },
       "Digitalroot.Valheim.Common.Utils": {
         "type": "Direct",
-        "requested": "[1.0.64, )",
-        "resolved": "1.0.64",
-        "contentHash": "47tdaqSzl8VCLGJ2owH4O7+FfUoSq/qSA3cNWpcqihwkmgUAner+FFkxYupxr0WVGL05jgI2u78jOBpGKP71TQ==",
+        "requested": "[1.0.65, )",
+        "resolved": "1.0.65",
+        "contentHash": "959nl5YeT++Q/PEXRIQqI5WmY9cA5gdcVECUN+wRPkSgyImROWHxU7u1VXus59BwRxL/rGSOz0YyIIxjVh7lBA==",
         "dependencies": {
-          "Digitalroot.Valheim.Common.Log": "1.1.53"
+          "Digitalroot.Valheim.Common.Log": "1.1.54"
         }
       },
       "Digitalroot.Valheim.References.JvL": {
@@ -105,8 +105,8 @@
       },
       "Digitalroot.Valheim.Common.Json": {
         "type": "Transitive",
-        "resolved": "1.0.41",
-        "contentHash": "GScGAJd21loJA8SLAZ6ZhnP40T3wEF79uEUpL9GDPirr/nwFnybUeafZwKtSWvauPVZT/x/fXc8SJ5j68WjQ5Q==",
+        "resolved": "1.0.42",
+        "contentHash": "5r8ytfJ7Aua1bDbLd5Ypg6k+xARnxnz/hVG/ZIhURdkPrSKhza5ynHZS/UCgturb6Ouj4OK+29I1xiUqRoXmCQ==",
         "dependencies": {
           "Digitalroot.References.Unity": "2022.3.17",
           "LibZ.Tool": "1.2.0"
