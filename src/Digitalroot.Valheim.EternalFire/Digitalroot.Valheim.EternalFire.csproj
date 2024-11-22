@@ -51,7 +51,7 @@
       <IncludeAssets>compile; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="Digitalroot.Valheim.Common.Log" Version="1.1.56" />
-    <PackageReference Include="Digitalroot.Valheim.Common.Names" Version="1.4.42">
+    <PackageReference Include="Digitalroot.Valheim.Common.Names" Version="1.4.43">
       <IncludeAssets></IncludeAssets>
     </PackageReference>
     <PackageReference Include="Digitalroot.Valheim.Common.References" Version="0.219.16">
