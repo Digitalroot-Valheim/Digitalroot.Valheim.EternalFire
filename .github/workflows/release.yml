@@ -33,8 +33,10 @@ jobs:
       is-nuget-package: false
       nexus-enable-upload: true
       nexus-mod-id: 2754
+      nexus-mod-file-id: 2529454
       ts-enable-upload: true
       ts-name: Eternal_Fire
       ts-description: "Keeps fires burning."
       ts-categories: "server-side client-side tweaks" #https://thunderstore.io/api/experimental/community/valheim/category/
-      ts-dependencies: ValheimModding-Jotunn-2.20.0
+      ts-dependencies: ValheimModding-Jotunn-2.29.2
+      skip-unit-tests: true

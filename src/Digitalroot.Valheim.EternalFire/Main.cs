@@ -1,7 +1,6 @@
 ﻿using BepInEx;
 using BepInEx.Configuration;
 using Digitalroot.Valheim.Common;
-using Digitalroot.Valheim.Common.Names;
 using HarmonyLib;
 using JetBrains.Annotations;
 using Jotunn.Utils;
