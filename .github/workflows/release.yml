@@ -38,5 +38,5 @@ jobs:
       ts-name: Eternal_Fire
       ts-description: "Keeps fires burning."
       ts-categories: "server-side client-side tweaks" #https://thunderstore.io/api/experimental/community/valheim/category/
-      ts-dependencies: ValheimModding-Jotunn-2.29.2
+      ts-dependencies: ValheimModding-Jotunn-2.30.0
       skip-unit-tests: true
