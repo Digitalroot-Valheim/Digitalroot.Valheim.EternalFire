@@ -27,7 +27,7 @@
       https://nuget.bepinex.dev/v3/index.json;
       https://digitalroot-valheim-nuget.s3.us-west-2.amazonaws.com/index.json
     </RestoreAdditionalProjectSources>
-    <VersionPrefix>0.0.1</VersionPrefix>
+    <VersionPrefix>1.1.0</VersionPrefix>
     <Configurations>Debug;Release</Configurations>
   </PropertyGroup>
 
