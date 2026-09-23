@@ -1,6 +1,6 @@
 ﻿using BepInEx;
 using BepInEx.Configuration;
-using Digitalroot.Valheim.Common;
+using DMF = Digitalroot.Modding.Framework;
 using HarmonyLib;
 using JetBrains.Annotations;
 using Jotunn.Utils;
@@ -16,7 +16,7 @@ namespace Digitalroot.Valheim.EternalFire
   [BepInDependency(Jotunn.Main.ModGuid)]
   [NetworkCompatibility(CompatibilityLevel.VersionCheckOnly, VersionStrictness.Minor)]
   [SuppressMessage("ReSharper", "MemberCanBePrivate.Global")]
-  public partial class Main : BaseUnityPlugin, ITraceableLogging
+  public partial class Main : BaseUnityPlugin, DMF.Logging.ITraceableLogging
   {
     private Harmony _harmony;
     public static Main Instance;
@@ -48,11 +48,11 @@ namespace Digitalroot.Valheim.EternalFire
       Instance = this;
       #if DEBUG
       EnableTrace = true;
-      Log.RegisterSource(Instance);
+      DMF.Logging.Log.RegisterSource(Instance);
       #else
       EnableTrace = false;
       #endif
-      Log.Trace(Instance, $"{Namespace}.{MethodBase.GetCurrentMethod()?.DeclaringType?.Name}.{MethodBase.GetCurrentMethod()?.Name}");
+      DMF.Logging.Log.Trace(Instance, $"{Namespace}.{MethodBase.GetCurrentMethod()?.DeclaringType?.Name}.{MethodBase.GetCurrentMethod()?.Name}");
     }
 
     [UsedImplicitly]
@@ -60,7 +60,7 @@ namespace Digitalroot.Valheim.EternalFire
     {
       try
       {
-        Log.Trace(Instance, $"{Namespace}.{MethodBase.GetCurrentMethod()?.DeclaringType?.Name}.{MethodBase.GetCurrentMethod()?.Name}");
+        DMF.Logging.Log.Trace(Instance, $"{Namespace}.{MethodBase.GetCurrentMethod()?.DeclaringType?.Name}.{MethodBase.GetCurrentMethod()?.Name}");
         NexusId = Config.Bind(PluginConfigSection.General, "NexusID", 2754, new ConfigDescription("Nexus mod ID for updates", null, new ConfigurationManagerAttributes { Browsable = false, ReadOnly = true }));
         config_fire_pit = Config.Bind<bool>(PluginConfigSection.Fireplaces, "CampFire", true, new ConfigDescription("Enable Campfire", null, new ConfigurationManagerAttributes { Browsable = true, ReadOnly = false, isAdminOnly = true }));
         config_iron_fire_pit = Config.Bind<bool>(PluginConfigSection.Fireplaces, "IronFirePit", true, new ConfigDescription("Enable Iron Fire Pit", null, new ConfigurationManagerAttributes { Browsable = true, ReadOnly = false, isAdminOnly = true }));
@@ -75,7 +75,7 @@ namespace Digitalroot.Valheim.EternalFire
         config_piece_brazierceiling01 = Config.Bind<bool>(PluginConfigSection.Fireplaces, "HangingBrazier", true, new ConfigDescription("Enable Hanging Brazier", null, new ConfigurationManagerAttributes { Browsable = true, ReadOnly = false, isAdminOnly = true }));
         config_piece_jackoturnip = Config.Bind<bool>(PluginConfigSection.Fireplaces, "JackOTurnip", true, new ConfigDescription("Enable Jack-o-Turnip", null, new ConfigurationManagerAttributes { Browsable = true, ReadOnly = false, isAdminOnly = true }));
         config_hearth = Config.Bind<bool>(PluginConfigSection.Fireplaces, "Hearth", true, new ConfigDescription("Enable Hearth", null, new ConfigurationManagerAttributes { Browsable = true, ReadOnly = false, isAdminOnly = true }));
-        config_piece_bathtub = Config.Bind<bool>(PluginConfigSection.Fireplaces, "HotTub", true, new ConfigDescription("Enable Hot Tub", null, new ConfigurationManagerAttributes { Browsable = true, ReadOnly = false, isAdminOnly = true }));
+        config_piece_bathtub = Config.Bind<bool>(PluginConfigSection.Smelters, "HotTub", true, new ConfigDescription("Enable Hot Tub", null, new ConfigurationManagerAttributes { Browsable = true, ReadOnly = false, isAdminOnly = true }));
         config_piece_oven = Config.Bind<bool>(PluginConfigSection.CookingStations, "StoneOven", true, new ConfigDescription("Enable Stone Oven", null, new ConfigurationManagerAttributes { Browsable = true, ReadOnly = false, isAdminOnly = true }));
         config_smelter = Config.Bind<bool>(PluginConfigSection.Smelters, "Smelter", false, new ConfigDescription("Enable Smelter", null, new ConfigurationManagerAttributes { Browsable = true, ReadOnly = false, isAdminOnly = true }));
         config_blastfurnace = Config.Bind<bool>(PluginConfigSection.Smelters, "BlastFurnace", false, new ConfigDescription("Enable Blast Furnace", null, new ConfigurationManagerAttributes { Browsable = true, ReadOnly = false, isAdminOnly = true }));
@@ -86,7 +86,7 @@ namespace Digitalroot.Valheim.EternalFire
       }
       catch (Exception e)
       {
-        Log.Error(Instance, e);
+        DMF.Logging.Log.Error(Instance, e);
       }
     }
 
@@ -95,100 +95,112 @@ namespace Digitalroot.Valheim.EternalFire
     {
       try
       {
-        Log.Trace(Instance, $"{Namespace}.{MethodBase.GetCurrentMethod()?.DeclaringType?.Name}.{MethodBase.GetCurrentMethod()?.Name}");
+        DMF.Logging.Log.Trace(Instance, $"{Namespace}.{MethodBase.GetCurrentMethod()?.DeclaringType?.Name}.{MethodBase.GetCurrentMethod()?.Name}");
         _harmony?.UnpatchSelf();
       }
       catch (Exception e)
       {
-        Log.Error(Instance, e);
+        DMF.Logging.Log.Error(Instance, e);
       }
     }
 
-    public static async void Refuel(ZNetView znview)
+    // ReSharper disable once IdentifierTypo
+    public static void Refuel(ZNetView znview)
     {
-      await Task.Delay(33);
+      Task.Delay(33).Wait();
       znview.InvokeRPC("AddFuel");
     }
 
     public static bool ConfigCheck(string instanceName)
     {
       bool EternalFuel = false;
-      switch (instanceName.Replace("(Clone)", string.Empty))
+      instanceName = instanceName.Replace("(Clone)", string.Empty); 
+      switch (instanceName)
       {
-        case Common.Names.Vanilla.PrefabNames.FirePit:
+        case DMF.Names.Vanilla.PrefabNames.FirePit:
           EternalFuel = config_fire_pit.Value;
           break;
 
-        case Common.Names.Vanilla.PrefabNames.FirePitIron:
+        case DMF.Names.Vanilla.PrefabNames.FirePitIron:
           EternalFuel = config_iron_fire_pit.Value;
           break;
 
-        case Common.Names.Vanilla.PrefabNames.Bonfire:
+        case DMF.Names.Vanilla.PrefabNames.Bonfire:
           EternalFuel = config_bonfire.Value;
           break;
 
-        case Common.Names.Vanilla.PrefabNames.Hearth:
+        case DMF.Names.Vanilla.PrefabNames.Hearth:
           EternalFuel = config_hearth.Value;
           break;
 
-        case Common.Names.Vanilla.PrefabNames.PieceWalltorch:
+        case DMF.Names.Vanilla.PrefabNames.PieceWalltorch:
           EternalFuel = config_piece_walltorch.Value;
           break;
 
-        case Common.Names.Vanilla.PrefabNames.PieceGroundtorch:
+        case DMF.Names.Vanilla.PrefabNames.PieceGroundtorch:
           EternalFuel = config_piece_groundtorch.Value;
           break;
 
-        case Common.Names.Vanilla.PrefabNames.PieceGroundtorchWood:
+        case DMF.Names.Vanilla.PrefabNames.PieceGroundtorchWood:
           EternalFuel = config_piece_groundtorch_wood.Value;
           break;
 
-        case Common.Names.Vanilla.PrefabNames.PieceGroundtorchGreen:
+        case DMF.Names.Vanilla.PrefabNames.PieceGroundtorchGreen:
           EternalFuel = config_piece_groundtorch_green.Value;
           break;
 
-        case Common.Names.Vanilla.PrefabNames.PieceGroundtorchBlue:
+        case DMF.Names.Vanilla.PrefabNames.PieceGroundtorchBlue:
           EternalFuel = config_piece_groundtorch_blue.Value;
           break;
 
-        case Common.Names.Vanilla.PrefabNames.PieceBrazierfloor01:
+        case DMF.Names.Vanilla.PrefabNames.PieceBrazierfloor01:
           EternalFuel = config_piece_brazierfloor01.Value;
           break;
 
-        case Common.Names.Vanilla.PrefabNames.PieceBrazierfloor02:
+        case DMF.Names.Vanilla.PrefabNames.PieceBrazierfloor02:
           EternalFuel = config_piece_brazierfloor02.Value;
           break;
 
-        case Common.Names.Vanilla.PrefabNames.PieceBrazierceiling01:
+        case DMF.Names.Vanilla.PrefabNames.PieceBrazierceiling01:
           EternalFuel = config_piece_brazierceiling01.Value;
           break;
 
-        case Common.Names.Vanilla.PrefabNames.PieceJackoturnip:
+        case DMF.Names.Vanilla.PrefabNames.PieceJackoturnip:
           EternalFuel = config_piece_jackoturnip.Value;
           break;
 
-        case Common.Names.Vanilla.PrefabNames.PieceOven:
+        case DMF.Names.Vanilla.PrefabNames.PieceOven:
           EternalFuel = config_piece_oven.Value;
           break;
 
-        case Common.Names.Vanilla.PrefabNames.Smelter:
+        case DMF.Names.Vanilla.PrefabNames.Smelter:
           EternalFuel = config_smelter.Value;
           break;
 
-        case Common.Names.Vanilla.PrefabNames.Blastfurnace:
+        case DMF.Names.Vanilla.PrefabNames.Blastfurnace:
           EternalFuel = config_blastfurnace.Value;
           break;
 
-        case Common.Names.Vanilla.PrefabNames.Eitrrefinery:
+        case DMF.Names.Vanilla.PrefabNames.Eitrrefinery:
           EternalFuel = config_eitrrefinery.Value;
           break;
 
-        case Common.Names.Vanilla.PrefabNames.PieceBathtub:
+        case DMF.Names.Vanilla.PrefabNames.PieceBathtub:
           EternalFuel = config_piece_bathtub.Value;
+          break;
+
+        default:
+          DMF.Logging.Log.Trace(Instance, $"{Namespace}.{MethodBase.GetCurrentMethod()?.DeclaringType?.Name}.{MethodBase.GetCurrentMethod()?.Name}[{instanceName}] Unknown");
           break;
       }
 
-      if (config_custom_instance.Value.Split(',').Contains(instanceName.Remove(instanceName.Length - 7))) EternalFuel = true;
+      if (config_custom_instance.Value.Split(',').Contains(instanceName))
+      {
+        EternalFuel = true;
+      }
+
+      DMF.Logging.Log.Trace(Instance, $"{Namespace}.{MethodBase.GetCurrentMethod()?.DeclaringType?.Name}.{MethodBase.GetCurrentMethod()?.Name}[{instanceName}] {EternalFuel}");
+
       return EternalFuel;
     }
 
