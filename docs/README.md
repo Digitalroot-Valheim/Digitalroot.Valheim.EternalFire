@@ -1,5 +1,8 @@
 # Eternal Fire
 
+<a href="https://github.com/Digitalroot-Valheim/Digitalroot.Valheim.EternalFire/releases/latest" target="_blank"><img src="https://badgen.net/github/release/Digitalroot-Valheim/Digitalroot.Valheim.EternalFire/stable"></a>
+<a href="https://github.com/Digitalroot-Valheim/Digitalroot.Valheim.EternalFire/issues" target="_blank"><img src="https://badgen.net/github/open-issues/Digitalroot-Valheim/Digitalroot.Valheim.EternalFire"></a>
+
 ## Summary
 
 Keeps fires burning.
@@ -32,7 +35,7 @@ Keeps fires lit and burning without needing to fuel them.
 | StandingBrazier                 | Fireplaces        | bool      | Enable Standing Brazier                   |
 | HangingBrazier                  | Fireplaces        | bool      | Enable Hanging Brazier                    |
 | Hearth                          | Fireplaces        | bool      | Enable Hearth                             |
-| HotTub                          | Fireplaces        | bool      | Enable Hot Tub                            |
+| HotTub                          | Smelters          | bool      | Enable Hot Tub                            |
 | JackOTurnip                     | Fireplaces        | bool      | Enable Jack O' Turnip                     |
 | StoneOven                       | Cooking Stations  | bool      | Enable Stone Oven                         |
 | Smelter                         | Smelters          | bool      | Enable Smelter                            |
