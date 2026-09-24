@@ -14,9 +14,22 @@ namespace Digitalroot.Valheim.EternalFire
     public class PatchFireplaceUpdateFireplace
     {
       [HarmonyPrefix, HarmonyPatch(typeof(Fireplace), nameof(Fireplace.UpdateFireplace))]
-      private static void Prefix(ref Fireplace __instance, ref ZNetView ___m_nview)
+      private static void PrefixUpdateFireplace(ref Fireplace __instance, ref ZNetView ___m_nview)
       {
         __instance.m_infiniteFuel = Main.ConfigCheck(__instance.name);
+      }
+
+      [HarmonyPostfix, HarmonyPatch(typeof(Fireplace), nameof(Fireplace.GetHoverText))]
+      private static void PostfixGetHoverText(ref Fireplace __instance, ref ZNetView ___m_nview, ref string __result)
+      {
+        if (___m_nview.IsValid() && Main.ConfigCheck(__instance.name))
+        {
+          if (string.IsNullOrWhiteSpace(__result))
+          {
+            __result = "\n";
+          }
+          __result += "<color=#FFFF0088><b>Eternal</b></color>";
+        }
       }
     }
 
