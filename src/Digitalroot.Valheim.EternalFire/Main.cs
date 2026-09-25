@@ -8,7 +8,6 @@ using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
-using System.Threading.Tasks;
 
 namespace Digitalroot.Valheim.EternalFire
 {
@@ -104,13 +103,6 @@ namespace Digitalroot.Valheim.EternalFire
       }
     }
 
-    // ReSharper disable once IdentifierTypo
-    public static void Refuel(ZNetView znview)
-    {
-      Task.Delay(33).Wait();
-      znview.InvokeRPC("AddFuel");
-    }
-
     public static bool ConfigCheck(string instanceName)
     {
       bool EternalFuel = false;
@@ -199,7 +191,7 @@ namespace Digitalroot.Valheim.EternalFire
         EternalFuel = true;
       }
 
-      DMF.Logging.Log.Trace(Instance, $"{Namespace}.{MethodBase.GetCurrentMethod()?.DeclaringType?.Name}.{MethodBase.GetCurrentMethod()?.Name}[{instanceName}] {EternalFuel}");
+      // DMF.Logging.Log.Trace(Instance, $"{Namespace}.{MethodBase.GetCurrentMethod()?.DeclaringType?.Name}.{MethodBase.GetCurrentMethod()?.Name}[{instanceName}] {EternalFuel}");
 
       return EternalFuel;
     }

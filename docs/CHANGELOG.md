@@ -1,3 +1,9 @@
+## v1.1.1
+- Refactored refueling to use RPC calls.
+- Added RPC calls for tagging fire sources as Eternal
+- Replace Hover Text on fire sources with "Eternal" for fire sources the mod is enabled for.
+- Disabled the ability to add fuel to an Eternal fire source.
+
 ## v1.1.0
 - Refactored how mod functions.
 - Enabling/Disabling a fire source works in real time.
