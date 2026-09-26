@@ -51,7 +51,7 @@ namespace Digitalroot.Valheim.EternalFire
       [HarmonyPostfix, HarmonyPatch(typeof(Fireplace), nameof(Fireplace.GetHoverText))]
       private static void PostfixGetHoverText(Fireplace __instance, ZNetView ___m_nview, ref string __result)
       {
-        if (___m_nview.IsValid() && __instance.IsEternal())
+        if (___m_nview.IsValid() && __instance.IsEternal() && __instance.m_infiniteFuel)
         {
           __result = "<color=#FFFF0088><b>Eternal</b></color>";
         }
@@ -231,7 +231,7 @@ namespace Digitalroot.Valheim.EternalFire
       if (fireplace.m_nview == null
           || !fireplace.m_nview.IsValid()
           || !fireplace.m_nview.IsOwner()
-          || fireplace.IsEternal()
+          || (fireplace.IsEternal() && fireplace.m_infiniteFuel)
           || !Main.ConfigCheck(fireplace.name))
       {
         return;
@@ -253,7 +253,7 @@ namespace Digitalroot.Valheim.EternalFire
       if (fireplace.m_nview == null
           || !fireplace.m_nview.IsValid()
           || !fireplace.m_nview.IsOwner()
-          || !fireplace.IsEternal()
+          || (!fireplace.IsEternal() && !fireplace.m_infiniteFuel)
           || Main.ConfigCheck(fireplace.name))
       {
         return;

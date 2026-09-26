@@ -1,3 +1,6 @@
+## v1.1.3
+- Fixed a bug where fire sources in the `Fireplaces` category could be set to Eternal but `m_infiniteFuel` was not being set. 
+
 ## v1.1.2
 - Removed delay causing stutter issues
 
