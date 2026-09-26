@@ -1,3 +1,6 @@
+## v1.1.2
+- Removed delay causing stutter issues
+
 ## v1.1.1
 - Refactored refueling to use RPC calls.
 - Added RPC calls for tagging fire sources as Eternal

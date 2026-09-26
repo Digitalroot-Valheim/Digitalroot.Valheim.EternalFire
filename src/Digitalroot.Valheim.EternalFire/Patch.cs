@@ -2,7 +2,6 @@
 using JetBrains.Annotations;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
-using System.Threading.Tasks;
 using DMF = Digitalroot.Modding.Framework;
 
 namespace Digitalroot.Valheim.EternalFire
@@ -35,7 +34,6 @@ namespace Digitalroot.Valheim.EternalFire
           if (!__instance.IsEternal() || !__instance.m_infiniteFuel)
           {
             // Tell the owner to tag Fireplace as Eternal and enable m_infiniteFuel.
-            Task.Delay(33).Wait();
             ___m_nview.InvokeRPC(nameof(FireplaceExtensions.RPC_EnableEternal));
           }
         }
@@ -45,7 +43,6 @@ namespace Digitalroot.Valheim.EternalFire
           if (__instance.IsEternal() || __instance.m_infiniteFuel)
           {
             // Tell the owner to untag Fireplace as Eternal and disable m_infiniteFuel.
-            Task.Delay(33).Wait();
             ___m_nview.InvokeRPC(nameof(FireplaceExtensions.RPC_DisableEternal));
           }
         }
@@ -94,7 +91,6 @@ namespace Digitalroot.Valheim.EternalFire
           if (!__instance.IsEternal())
           {
             // Tell the owner to tag the CookingStation as Eternal
-            Task.Delay(33).Wait();
             ___m_nview.InvokeRPC(nameof(CookingStationExtensions.RPC_EnableEternal));
           }
         }
@@ -104,7 +100,6 @@ namespace Digitalroot.Valheim.EternalFire
           if (__instance.IsEternal())
           {
             // Tell the owner to untag the CookingStation as Eternal
-            Task.Delay(33).Wait();
             ___m_nview.InvokeRPC(nameof(CookingStationExtensions.RPC_DisableEternal));
           }
         }
@@ -112,7 +107,6 @@ namespace Digitalroot.Valheim.EternalFire
         if (__instance.IsEternal() && __instance.GetFuel() == 0f)
         {
           // Tell the owner to add fuel to the CookingStation
-          Task.Delay(33).Wait();
           ___m_nview.InvokeRPC(nameof(CookingStation.RPC_AddFuel));
         }
       }
@@ -166,7 +160,6 @@ namespace Digitalroot.Valheim.EternalFire
           if (!__instance.IsEternal())
           {
             // Tell the owner to tag the Smelter as Eternal
-            Task.Delay(33).Wait();
             ___m_nview.InvokeRPC(nameof(SmelterExtensions.RPC_EnableEternal));
           }
         }
@@ -176,7 +169,6 @@ namespace Digitalroot.Valheim.EternalFire
           if (__instance.IsEternal())
           {
             // Tell the owner to untag the Smelter as Eternal
-            Task.Delay(33).Wait();
             ___m_nview.InvokeRPC(nameof(SmelterExtensions.RPC_DisableEternal));
           }
         }
@@ -184,7 +176,6 @@ namespace Digitalroot.Valheim.EternalFire
         if (__instance.IsEternal() && __instance.GetFuel() == 0f)
         {
           // Tell the owner to add fuel to the Smelter
-          Task.Delay(33).Wait();
           ___m_nview.InvokeRPC(nameof(Smelter.RPC_AddFuel));
         }
       }
