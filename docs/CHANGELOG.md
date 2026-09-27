@@ -1,3 +1,6 @@
+## v1.1.4
+- Fixed a `Fireplace` compatbility bug with the [NoSmokeSimplified](https://thunderstore.io/c/valheim/p/TastyChickenLegs/NoSmokeSimplified/) mod by TastyChickenLegs.
+
 ## v1.1.3
 - Fixed a bug where fire sources in the `Fireplaces` category could be set to Eternal but `m_infiniteFuel` was not being set. 
 

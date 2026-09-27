@@ -46,6 +46,13 @@ namespace Digitalroot.Valheim.EternalFire
             ___m_nview.InvokeRPC(nameof(FireplaceExtensions.RPC_DisableEternal));
           }
         }
+
+        if (__instance.IsEternal() && ___m_nview.GetZDO().GetFloat(ZDOVars.s_fuel) < 1f)
+        {
+          // Tell the owner to add fuel to the Fireplace
+          ___m_nview.InvokeRPC(nameof(Fireplace.RPC_AddFuel));
+        }
+
       }
 
       [HarmonyPostfix, HarmonyPatch(typeof(Fireplace), nameof(Fireplace.GetHoverText))]
@@ -262,6 +269,10 @@ namespace Digitalroot.Valheim.EternalFire
       DMF.Logging.Log.Trace(Main.Instance, $"{Main.Namespace}.{MethodBase.GetCurrentMethod()?.DeclaringType?.Name}.{MethodBase.GetCurrentMethod()?.Name}");
       fireplace.m_nview.GetZDO().Set(Main.Guid.GetStableHashCode(), false);
       fireplace.m_infiniteFuel = false;
+      if (fireplace.m_nview.GetZDO().GetFloat(ZDOVars.s_fuel) <= 1f)
+      {
+        fireplace.SetFuel(0f);
+      }
     }
   }
 

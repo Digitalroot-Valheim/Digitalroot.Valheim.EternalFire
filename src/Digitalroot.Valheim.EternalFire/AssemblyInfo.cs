@@ -1,5 +1,5 @@
-﻿using Digitalroot.Valheim.EternalFire;
-using Digitalroot.Valheim.Common;
+﻿using Digitalroot.Modding.Framework.Common;
+using Digitalroot.Valheim.EternalFire;
 
 
 using System.Reflection;

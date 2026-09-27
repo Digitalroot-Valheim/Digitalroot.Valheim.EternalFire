@@ -22,6 +22,7 @@ namespace Digitalroot.Valheim.EternalFire
 
     // [UsedImplicitly] public static ConfigEntry<int> NexusId;
     public static ConfigEntry<int> NexusId { get; private set; }
+    // private static ConfigEntry<bool> _enableDebugging;
     private static ConfigEntry<bool> config_fire_pit;
     private static ConfigEntry<bool> config_iron_fire_pit;
     private static ConfigEntry<bool> config_bonfire;
@@ -47,10 +48,10 @@ namespace Digitalroot.Valheim.EternalFire
       Instance = this;
       #if DEBUG
       EnableTrace = true;
-      DMF.Logging.Log.RegisterSource(Instance);
       #else
       EnableTrace = false;
       #endif
+      DMF.Logging.Log.RegisterSource(Instance);
       DMF.Logging.Log.Trace(Instance, $"{Namespace}.{MethodBase.GetCurrentMethod()?.DeclaringType?.Name}.{MethodBase.GetCurrentMethod()?.Name}");
     }
 
@@ -61,6 +62,7 @@ namespace Digitalroot.Valheim.EternalFire
       {
         DMF.Logging.Log.Trace(Instance, $"{Namespace}.{MethodBase.GetCurrentMethod()?.DeclaringType?.Name}.{MethodBase.GetCurrentMethod()?.Name}");
         NexusId = Config.Bind(PluginConfigSection.General, "NexusID", 2754, new ConfigDescription("Nexus mod ID for updates", null, new ConfigurationManagerAttributes { Browsable = false, ReadOnly = true }));
+        // _enableDebugging = Config.Bind(PluginConfigSection.General, "EnableDebugging", false, new ConfigDescription("Enable Debug Logging", null, new ConfigurationManagerAttributes { Browsable = true, ReadOnly = false, IsAdvanced = true }));
         config_fire_pit = Config.Bind<bool>(PluginConfigSection.Fireplaces, "CampFire", true, new ConfigDescription("Enable Campfire", null, new ConfigurationManagerAttributes { Browsable = true, ReadOnly = false, isAdminOnly = true }));
         config_iron_fire_pit = Config.Bind<bool>(PluginConfigSection.Fireplaces, "IronFirePit", true, new ConfigDescription("Enable Iron Fire Pit", null, new ConfigurationManagerAttributes { Browsable = true, ReadOnly = false, isAdminOnly = true }));
         config_bonfire = Config.Bind<bool>(PluginConfigSection.Fireplaces, "Bonfire", true, new ConfigDescription("Enable Bonfire", null, new ConfigurationManagerAttributes { Browsable = true, ReadOnly = false, isAdminOnly = true }));
@@ -81,12 +83,19 @@ namespace Digitalroot.Valheim.EternalFire
         config_eitrrefinery = Config.Bind<bool>(PluginConfigSection.Smelters, "EitrRefinery", false, new ConfigDescription("Enable Eitr Refinery", null, new ConfigurationManagerAttributes { Browsable = true, ReadOnly = false, isAdminOnly = true }));
         config_custom_instance = Config.Bind<string>(PluginConfigSection.Custom, "CustomPrefabs", "", new ConfigDescription("A comma-separated list of prefab names", null, new ConfigurationManagerAttributes { Browsable = true, ReadOnly = false, isAdminOnly = true }));
 
+        // _enableDebugging.SettingChanged += _enableDebugging_SettingChanged;
         _harmony = Harmony.CreateAndPatchAll(typeof(Main).Assembly, Guid);
       }
       catch (Exception e)
       {
         DMF.Logging.Log.Error(Instance, e);
       }
+    }
+
+    private void _enableDebugging_SettingChanged(object sender, EventArgs e)
+    {
+      DMF.Logging.Log.Trace(Instance, $"{Namespace}.{MethodBase.GetCurrentMethod()?.DeclaringType?.Name}.{MethodBase.GetCurrentMethod()?.Name}[{EnableTrace}] => [{_enableDebugging.Value}]");
+      // EnableTrace = _enableDebugging.Value;
     }
 
     [UsedImplicitly]
@@ -202,7 +211,7 @@ namespace Digitalroot.Valheim.EternalFire
     public string Source => Namespace;
 
     /// <inheritdoc />
-    public bool EnableTrace { get; }
+    public bool EnableTrace { get; private set; }
 
     #endregion
   }
