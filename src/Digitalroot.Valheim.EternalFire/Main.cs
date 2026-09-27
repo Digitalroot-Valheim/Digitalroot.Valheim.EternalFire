@@ -94,7 +94,7 @@ namespace Digitalroot.Valheim.EternalFire
 
     private void _enableDebugging_SettingChanged(object sender, EventArgs e)
     {
-      DMF.Logging.Log.Trace(Instance, $"{Namespace}.{MethodBase.GetCurrentMethod()?.DeclaringType?.Name}.{MethodBase.GetCurrentMethod()?.Name}[{EnableTrace}] => [{_enableDebugging.Value}]");
+      // DMF.Logging.Log.Trace(Instance, $"{Namespace}.{MethodBase.GetCurrentMethod()?.DeclaringType?.Name}.{MethodBase.GetCurrentMethod()?.Name}[{EnableTrace}] => [{_enableDebugging.Value}]");
       // EnableTrace = _enableDebugging.Value;
     }
 
