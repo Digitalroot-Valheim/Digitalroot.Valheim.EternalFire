@@ -20,38 +20,40 @@ namespace Digitalroot.Valheim.EternalFire
     private Harmony _harmony;
     public static Main Instance;
 
-    // [UsedImplicitly] public static ConfigEntry<int> NexusId;
+    [UsedImplicitly]
     public static ConfigEntry<int> NexusId { get; private set; }
-    // private static ConfigEntry<bool> _enableDebugging;
-    private static ConfigEntry<bool> config_fire_pit;
-    private static ConfigEntry<bool> config_iron_fire_pit;
-    private static ConfigEntry<bool> config_bonfire;
-    private static ConfigEntry<bool> config_hearth;
-    private static ConfigEntry<bool> config_piece_walltorch;
-    private static ConfigEntry<bool> config_piece_groundtorch;
-    private static ConfigEntry<bool> config_piece_groundtorch_wood;
-    private static ConfigEntry<bool> config_piece_groundtorch_green;
-    private static ConfigEntry<bool> config_piece_groundtorch_blue;
-    private static ConfigEntry<bool> config_piece_brazierfloor01;
-    private static ConfigEntry<bool> config_piece_brazierfloor02;
-    private static ConfigEntry<bool> config_piece_brazierceiling01;
-    private static ConfigEntry<bool> config_piece_jackoturnip;
-    private static ConfigEntry<bool> config_piece_oven;
-    private static ConfigEntry<bool> config_smelter;
-    private static ConfigEntry<bool> config_blastfurnace;
-    private static ConfigEntry<bool> config_eitrrefinery;
-    private static ConfigEntry<bool> config_piece_bathtub;
-    private static ConfigEntry<string> config_custom_instance;
+    public static ConfigEntry<string> TextColor { get; private set; }
+    private static ConfigEntry<bool> _configCandleResin;
+    private static ConfigEntry<bool> _configSnowLantern;
+    private static ConfigEntry<bool> _configFirePit;
+    private static ConfigEntry<bool> _configIronFirePit;
+    private static ConfigEntry<bool> _configBonfire;
+    private static ConfigEntry<bool> _configHearth;
+    private static ConfigEntry<bool> _configPieceWallTorch;
+    private static ConfigEntry<bool> _configPieceGroundTorch;
+    private static ConfigEntry<bool> _configPieceGroundTorchWood;
+    private static ConfigEntry<bool> _configPieceGroundTorchGreen;
+    private static ConfigEntry<bool> _configPieceGroundTorchBlue;
+    private static ConfigEntry<bool> _configPieceBrazierFloor01;
+    private static ConfigEntry<bool> _configPieceBrazierFloor02;
+    private static ConfigEntry<bool> _configPieceBrazierCeiling01;
+    private static ConfigEntry<bool> _configPieceJackoTurnip;
+    private static ConfigEntry<bool> _configPieceOven;
+    private static ConfigEntry<bool> _configSmelter;
+    private static ConfigEntry<bool> _configBlastFurnace;
+    private static ConfigEntry<bool> _configEitrRefinery;
+    private static ConfigEntry<bool> _configPieceBathtub;
+    private static ConfigEntry<string> _configCustomInstance;
 
     public Main()
     {
       Instance = this;
       #if DEBUG
       EnableTrace = true;
+      DMF.Logging.Log.RegisterSource(Instance); // Enable logging to a './BepInEx/logs' file.
       #else
       EnableTrace = false;
       #endif
-      DMF.Logging.Log.RegisterSource(Instance);
       DMF.Logging.Log.Trace(Instance, $"{Namespace}.{MethodBase.GetCurrentMethod()?.DeclaringType?.Name}.{MethodBase.GetCurrentMethod()?.Name}");
     }
 
@@ -62,40 +64,35 @@ namespace Digitalroot.Valheim.EternalFire
       {
         DMF.Logging.Log.Trace(Instance, $"{Namespace}.{MethodBase.GetCurrentMethod()?.DeclaringType?.Name}.{MethodBase.GetCurrentMethod()?.Name}");
         NexusId = Config.Bind(PluginConfigSection.General, "NexusID", 2754, new ConfigDescription("Nexus mod ID for updates", null, new ConfigurationManagerAttributes { Browsable = false, ReadOnly = true }));
-        // _enableDebugging = Config.Bind(PluginConfigSection.General, "EnableDebugging", false, new ConfigDescription("Enable Debug Logging", null, new ConfigurationManagerAttributes { Browsable = true, ReadOnly = false, IsAdvanced = true }));
-        config_fire_pit = Config.Bind<bool>(PluginConfigSection.Fireplaces, "CampFire", true, new ConfigDescription("Enable Campfire", null, new ConfigurationManagerAttributes { Browsable = true, ReadOnly = false, isAdminOnly = true }));
-        config_iron_fire_pit = Config.Bind<bool>(PluginConfigSection.Fireplaces, "IronFirePit", true, new ConfigDescription("Enable Iron Fire Pit", null, new ConfigurationManagerAttributes { Browsable = true, ReadOnly = false, isAdminOnly = true }));
-        config_bonfire = Config.Bind<bool>(PluginConfigSection.Fireplaces, "Bonfire", true, new ConfigDescription("Enable Bonfire", null, new ConfigurationManagerAttributes { Browsable = true, ReadOnly = false, isAdminOnly = true }));
-        config_piece_walltorch = Config.Bind<bool>(PluginConfigSection.Fireplaces, "Sconce", true, new ConfigDescription("Enable Sconce", null, new ConfigurationManagerAttributes { Browsable = true, ReadOnly = false, isAdminOnly = true }));
-        config_piece_groundtorch = Config.Bind<bool>(PluginConfigSection.Fireplaces, "StandingIronTorch", true, new ConfigDescription("Enable Standing Iron Torch", null, new ConfigurationManagerAttributes { Browsable = true, ReadOnly = false, isAdminOnly = true }));
-        config_piece_groundtorch_wood = Config.Bind<bool>(PluginConfigSection.Fireplaces, "StandingWoodTorch", true, new ConfigDescription("Enable Standing Wood Torch", null, new ConfigurationManagerAttributes { Browsable = true, ReadOnly = false, isAdminOnly = true }));
-        config_piece_groundtorch_green = Config.Bind<bool>(PluginConfigSection.Fireplaces, "StandingGreenBurningIronTorch", true, new ConfigDescription("Enable Standing Green Burning Iron Torch", null, new ConfigurationManagerAttributes { Browsable = true, ReadOnly = false, isAdminOnly = true }));
-        config_piece_groundtorch_blue = Config.Bind<bool>(PluginConfigSection.Fireplaces, "StandingBlueBurningIronTorch", true, new ConfigDescription("Enable Standing Blue Burning Iron Torch", null, new ConfigurationManagerAttributes { Browsable = true, ReadOnly = false, isAdminOnly = true }));
-        config_piece_brazierfloor01 = Config.Bind<bool>(PluginConfigSection.Fireplaces, "StandingBrazier", true, new ConfigDescription("Enable Standing Brazier", null, new ConfigurationManagerAttributes { Browsable = true, ReadOnly = false, isAdminOnly = true }));
-        config_piece_brazierfloor02 = Config.Bind<bool>(PluginConfigSection.Fireplaces, "StandingBlueBrazier", true, new ConfigDescription("Enable Standing Blue Brazier", null, new ConfigurationManagerAttributes { Browsable = true, ReadOnly = false, isAdminOnly = true }));
-        config_piece_brazierceiling01 = Config.Bind<bool>(PluginConfigSection.Fireplaces, "HangingBrazier", true, new ConfigDescription("Enable Hanging Brazier", null, new ConfigurationManagerAttributes { Browsable = true, ReadOnly = false, isAdminOnly = true }));
-        config_piece_jackoturnip = Config.Bind<bool>(PluginConfigSection.Fireplaces, "JackOTurnip", true, new ConfigDescription("Enable Jack-o-Turnip", null, new ConfigurationManagerAttributes { Browsable = true, ReadOnly = false, isAdminOnly = true }));
-        config_hearth = Config.Bind<bool>(PluginConfigSection.Fireplaces, "Hearth", true, new ConfigDescription("Enable Hearth", null, new ConfigurationManagerAttributes { Browsable = true, ReadOnly = false, isAdminOnly = true }));
-        config_piece_bathtub = Config.Bind<bool>(PluginConfigSection.Smelters, "HotTub", true, new ConfigDescription("Enable Hot Tub", null, new ConfigurationManagerAttributes { Browsable = true, ReadOnly = false, isAdminOnly = true }));
-        config_piece_oven = Config.Bind<bool>(PluginConfigSection.CookingStations, "StoneOven", true, new ConfigDescription("Enable Stone Oven", null, new ConfigurationManagerAttributes { Browsable = true, ReadOnly = false, isAdminOnly = true }));
-        config_smelter = Config.Bind<bool>(PluginConfigSection.Smelters, "Smelter", false, new ConfigDescription("Enable Smelter", null, new ConfigurationManagerAttributes { Browsable = true, ReadOnly = false, isAdminOnly = true }));
-        config_blastfurnace = Config.Bind<bool>(PluginConfigSection.Smelters, "BlastFurnace", false, new ConfigDescription("Enable Blast Furnace", null, new ConfigurationManagerAttributes { Browsable = true, ReadOnly = false, isAdminOnly = true }));
-        config_eitrrefinery = Config.Bind<bool>(PluginConfigSection.Smelters, "EitrRefinery", false, new ConfigDescription("Enable Eitr Refinery", null, new ConfigurationManagerAttributes { Browsable = true, ReadOnly = false, isAdminOnly = true }));
-        config_custom_instance = Config.Bind<string>(PluginConfigSection.Custom, "CustomPrefabs", "", new ConfigDescription("A comma-separated list of prefab names", null, new ConfigurationManagerAttributes { Browsable = true, ReadOnly = false, isAdminOnly = true }));
+        TextColor = Config.Bind(PluginConfigSection.General, "Text Color", "#FFFF0088", new ConfigDescription("#RGBA Color for Eternal Text (#RRGGBBAA)", null, new ConfigurationManagerAttributes { Browsable = true, ReadOnly = false, IsAdvanced = true}));
+        _configCandleResin = Config.Bind(PluginConfigSection.Fireplaces,  nameof(DMF.Names.Vanilla.PrefabNames.CandleResin), true, new ConfigDescription($"Enable {nameof(DMF.Names.Vanilla.PrefabNames.CandleResin)}", null, new ConfigurationManagerAttributes { Browsable = true, ReadOnly = false, isAdminOnly = true }));
+        _configSnowLantern = Config.Bind(PluginConfigSection.Fireplaces,  "SnowLantern", true, new ConfigDescription("Enable Snow Lantern", null, new ConfigurationManagerAttributes { Browsable = true, ReadOnly = false, isAdminOnly = true }));
+        _configFirePit = Config.Bind(PluginConfigSection.Fireplaces, "CampFire", true, new ConfigDescription("Enable Campfire", null, new ConfigurationManagerAttributes { Browsable = true, ReadOnly = false, isAdminOnly = true }));
+        _configIronFirePit = Config.Bind(PluginConfigSection.Fireplaces, "IronFirePit", true, new ConfigDescription("Enable Iron Fire Pit", null, new ConfigurationManagerAttributes { Browsable = true, ReadOnly = false, isAdminOnly = true }));
+        _configBonfire = Config.Bind(PluginConfigSection.Fireplaces, nameof(DMF.Names.Vanilla.PrefabNames.Bonfire), true, new ConfigDescription($"Enable {nameof(DMF.Names.Vanilla.PrefabNames.Bonfire)}", null, new ConfigurationManagerAttributes { Browsable = true, ReadOnly = false, isAdminOnly = true }));
+        _configPieceWallTorch = Config.Bind(PluginConfigSection.Fireplaces, "Sconce", true, new ConfigDescription("Enable Sconce", null, new ConfigurationManagerAttributes { Browsable = true, ReadOnly = false, isAdminOnly = true }));
+        _configPieceGroundTorch = Config.Bind(PluginConfigSection.Fireplaces, "StandingIronTorch", true, new ConfigDescription("Enable Standing Iron Torch", null, new ConfigurationManagerAttributes { Browsable = true, ReadOnly = false, isAdminOnly = true }));
+        _configPieceGroundTorchWood = Config.Bind(PluginConfigSection.Fireplaces, "StandingWoodTorch", true, new ConfigDescription("Enable Standing Wood Torch", null, new ConfigurationManagerAttributes { Browsable = true, ReadOnly = false, isAdminOnly = true }));
+        _configPieceGroundTorchGreen = Config.Bind(PluginConfigSection.Fireplaces, "StandingGreenBurningIronTorch", true, new ConfigDescription("Enable Standing Green Burning Iron Torch", null, new ConfigurationManagerAttributes { Browsable = true, ReadOnly = false, isAdminOnly = true }));
+        _configPieceGroundTorchBlue = Config.Bind(PluginConfigSection.Fireplaces, "StandingBlueBurningIronTorch", true, new ConfigDescription("Enable Standing Blue Burning Iron Torch", null, new ConfigurationManagerAttributes { Browsable = true, ReadOnly = false, isAdminOnly = true }));
+        _configPieceBrazierFloor01 = Config.Bind(PluginConfigSection.Fireplaces, "StandingBrazier", true, new ConfigDescription("Enable Standing Brazier", null, new ConfigurationManagerAttributes { Browsable = true, ReadOnly = false, isAdminOnly = true }));
+        _configPieceBrazierFloor02 = Config.Bind(PluginConfigSection.Fireplaces, "StandingBlueBrazier", true, new ConfigDescription("Enable Standing Blue Brazier", null, new ConfigurationManagerAttributes { Browsable = true, ReadOnly = false, isAdminOnly = true }));
+        _configPieceBrazierCeiling01 = Config.Bind(PluginConfigSection.Fireplaces, "HangingBrazier", true, new ConfigDescription("Enable Hanging Brazier", null, new ConfigurationManagerAttributes { Browsable = true, ReadOnly = false, isAdminOnly = true }));
+        _configPieceJackoTurnip = Config.Bind(PluginConfigSection.Fireplaces, "JackOTurnip", true, new ConfigDescription("Enable Jack-o-Turnip", null, new ConfigurationManagerAttributes { Browsable = true, ReadOnly = false, isAdminOnly = true }));
+        _configHearth = Config.Bind(PluginConfigSection.Fireplaces, nameof(DMF.Names.Vanilla.PrefabNames.Hearth), true, new ConfigDescription($"Enable {nameof(DMF.Names.Vanilla.PrefabNames.Hearth)}", null, new ConfigurationManagerAttributes { Browsable = true, ReadOnly = false, isAdminOnly = true }));
+        _configPieceBathtub = Config.Bind(PluginConfigSection.Smelters, "HotTub", true, new ConfigDescription("Enable Hot Tub", null, new ConfigurationManagerAttributes { Browsable = true, ReadOnly = false, isAdminOnly = true }));
+        _configPieceOven = Config.Bind(PluginConfigSection.CookingStations, "StoneOven", true, new ConfigDescription("Enable Stone Oven", null, new ConfigurationManagerAttributes { Browsable = true, ReadOnly = false, isAdminOnly = true }));
+        _configSmelter = Config.Bind(PluginConfigSection.Smelters, nameof(DMF.Names.Vanilla.PrefabNames.Smelter), false, new ConfigDescription($"Enable {nameof(DMF.Names.Vanilla.PrefabNames.Smelter)}", null, new ConfigurationManagerAttributes { Browsable = true, ReadOnly = false, isAdminOnly = true }));
+        _configBlastFurnace = Config.Bind(PluginConfigSection.Smelters, "BlastFurnace", false, new ConfigDescription("Enable Blast Furnace", null, new ConfigurationManagerAttributes { Browsable = true, ReadOnly = false, isAdminOnly = true }));
+        _configEitrRefinery = Config.Bind(PluginConfigSection.Smelters, "EitrRefinery", false, new ConfigDescription("Enable Eitr Refinery", null, new ConfigurationManagerAttributes { Browsable = true, ReadOnly = false, isAdminOnly = true }));
+        _configCustomInstance = Config.Bind(PluginConfigSection.Custom, "CustomPrefabs", "", new ConfigDescription("A comma-separated list of prefab names", null, new ConfigurationManagerAttributes { Browsable = true, ReadOnly = false, isAdminOnly = true }));
 
-        // _enableDebugging.SettingChanged += _enableDebugging_SettingChanged;
         _harmony = Harmony.CreateAndPatchAll(typeof(Main).Assembly, Guid);
       }
       catch (Exception e)
       {
         DMF.Logging.Log.Error(Instance, e);
       }
-    }
-
-    private void _enableDebugging_SettingChanged(object sender, EventArgs e)
-    {
-      // DMF.Logging.Log.Trace(Instance, $"{Namespace}.{MethodBase.GetCurrentMethod()?.DeclaringType?.Name}.{MethodBase.GetCurrentMethod()?.Name}[{EnableTrace}] => [{_enableDebugging.Value}]");
-      // EnableTrace = _enableDebugging.Value;
     }
 
     [UsedImplicitly]
@@ -119,75 +116,83 @@ namespace Digitalroot.Valheim.EternalFire
       switch (instanceName)
       {
         case DMF.Names.Vanilla.PrefabNames.FirePit:
-          EternalFuel = config_fire_pit.Value;
+          EternalFuel = _configFirePit.Value;
           break;
 
         case DMF.Names.Vanilla.PrefabNames.FirePitIron:
-          EternalFuel = config_iron_fire_pit.Value;
+          EternalFuel = _configIronFirePit.Value;
           break;
 
         case DMF.Names.Vanilla.PrefabNames.Bonfire:
-          EternalFuel = config_bonfire.Value;
+          EternalFuel = _configBonfire.Value;
           break;
 
         case DMF.Names.Vanilla.PrefabNames.Hearth:
-          EternalFuel = config_hearth.Value;
+          EternalFuel = _configHearth.Value;
           break;
 
         case DMF.Names.Vanilla.PrefabNames.PieceWalltorch:
-          EternalFuel = config_piece_walltorch.Value;
+          EternalFuel = _configPieceWallTorch.Value;
           break;
 
         case DMF.Names.Vanilla.PrefabNames.PieceGroundtorch:
-          EternalFuel = config_piece_groundtorch.Value;
+          EternalFuel = _configPieceGroundTorch.Value;
           break;
 
         case DMF.Names.Vanilla.PrefabNames.PieceGroundtorchWood:
-          EternalFuel = config_piece_groundtorch_wood.Value;
+          EternalFuel = _configPieceGroundTorchWood.Value;
           break;
 
         case DMF.Names.Vanilla.PrefabNames.PieceGroundtorchGreen:
-          EternalFuel = config_piece_groundtorch_green.Value;
+          EternalFuel = _configPieceGroundTorchGreen.Value;
           break;
 
         case DMF.Names.Vanilla.PrefabNames.PieceGroundtorchBlue:
-          EternalFuel = config_piece_groundtorch_blue.Value;
+          EternalFuel = _configPieceGroundTorchBlue.Value;
           break;
 
         case DMF.Names.Vanilla.PrefabNames.PieceBrazierfloor01:
-          EternalFuel = config_piece_brazierfloor01.Value;
+          EternalFuel = _configPieceBrazierFloor01.Value;
           break;
 
         case DMF.Names.Vanilla.PrefabNames.PieceBrazierfloor02:
-          EternalFuel = config_piece_brazierfloor02.Value;
+          EternalFuel = _configPieceBrazierFloor02.Value;
           break;
 
         case DMF.Names.Vanilla.PrefabNames.PieceBrazierceiling01:
-          EternalFuel = config_piece_brazierceiling01.Value;
+          EternalFuel = _configPieceBrazierCeiling01.Value;
           break;
 
         case DMF.Names.Vanilla.PrefabNames.PieceJackoturnip:
-          EternalFuel = config_piece_jackoturnip.Value;
+          EternalFuel = _configPieceJackoTurnip.Value;
           break;
 
         case DMF.Names.Vanilla.PrefabNames.PieceOven:
-          EternalFuel = config_piece_oven.Value;
+          EternalFuel = _configPieceOven.Value;
           break;
 
         case DMF.Names.Vanilla.PrefabNames.Smelter:
-          EternalFuel = config_smelter.Value;
+          EternalFuel = _configSmelter.Value;
           break;
 
         case DMF.Names.Vanilla.PrefabNames.Blastfurnace:
-          EternalFuel = config_blastfurnace.Value;
+          EternalFuel = _configBlastFurnace.Value;
           break;
 
         case DMF.Names.Vanilla.PrefabNames.Eitrrefinery:
-          EternalFuel = config_eitrrefinery.Value;
+          EternalFuel = _configEitrRefinery.Value;
           break;
 
         case DMF.Names.Vanilla.PrefabNames.PieceBathtub:
-          EternalFuel = config_piece_bathtub.Value;
+          EternalFuel = _configPieceBathtub.Value;
+          break;
+
+        case DMF.Names.Vanilla.PrefabNames.CandleResin:
+          EternalFuel = _configCandleResin.Value;
+          break;
+
+        case DMF.Names.Vanilla.PrefabNames.PieceSnowlantern:
+          EternalFuel = _configSnowLantern.Value;
           break;
 
         default:
@@ -195,7 +200,7 @@ namespace Digitalroot.Valheim.EternalFire
           break;
       }
 
-      if (config_custom_instance.Value.Split(',').Contains(instanceName))
+      if (_configCustomInstance.Value.Split(',').Contains(instanceName))
       {
         EternalFuel = true;
       }
@@ -211,7 +216,7 @@ namespace Digitalroot.Valheim.EternalFire
     public string Source => Namespace;
 
     /// <inheritdoc />
-    public bool EnableTrace { get; private set; }
+    public bool EnableTrace { get; }
 
     #endregion
   }

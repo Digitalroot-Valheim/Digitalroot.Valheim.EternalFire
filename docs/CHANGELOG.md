@@ -1,3 +1,10 @@
+## v1.1.5
+- Added localization for the hovertext.
+- Added config for the color of the hovertext.
+- Restored hover text for item slot usage.
+- Added Resin Candle
+- Added Snow Lantern
+
 ## v1.1.4
 - Fixed a `Fireplace` compatbility bug with the [NoSmokeSimplified](https://thunderstore.io/c/valheim/p/TastyChickenLegs/NoSmokeSimplified/) mod by TastyChickenLegs.
 

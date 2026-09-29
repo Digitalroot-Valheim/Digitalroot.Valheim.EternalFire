@@ -58,9 +58,21 @@ namespace Digitalroot.Valheim.EternalFire
       [HarmonyPostfix, HarmonyPatch(typeof(Fireplace), nameof(Fireplace.GetHoverText))]
       private static void PostfixGetHoverText(Fireplace __instance, ZNetView ___m_nview, ref string __result)
       {
+        // DMF.Logging.Log.Trace(Main.Instance, $"{Main.Namespace}.{MethodBase.GetCurrentMethod()?.DeclaringType?.Name}.{MethodBase.GetCurrentMethod()?.Name} [{__instance.name}]");
         if (___m_nview.IsValid() && __instance.IsEternal() && __instance.m_infiniteFuel)
         {
-          __result = "<color=#FFFF0088><b>Eternal</b></color>";
+          __result = __instance.m_name;
+          if (__instance.name.Replace("(Clone)", string.Empty) == DMF.Names.Vanilla.PrefabNames.CandleResin)
+          {
+            __result += "\n[<color=yellow><b>$KEY_Use</b></color>] $piece_use";
+          }
+          else if (__instance.m_canRefill)
+          {
+            __result += "\n[<color=yellow><b>$KEY_HotbarUse</b></color>] $piece_useitem";
+
+          }
+          __result += $"\n<color={Main.TextColor.Value}><b>$mod_eternal_fire_hover_text</b></color>";
+          __result = Localization.instance.Localize(__result);
         }
       }
     }
@@ -78,12 +90,6 @@ namespace Digitalroot.Valheim.EternalFire
         if (___m_nview == null || !___m_nview.IsValid()) return;
         ___m_nview.Register(nameof(CookingStationExtensions.RPC_EnableEternal), __instance.RPC_EnableEternal);
         ___m_nview.Register(nameof(CookingStationExtensions.RPC_DisableEternal), __instance.RPC_DisableEternal);
-      }
-
-      [HarmonyPrefix, HarmonyPatch(typeof(CookingStation), nameof(CookingStation.Update))]
-      private static void PrefixUpdate(CookingStation __instance, ZNetView ___m_nview)
-      {
-        if (___m_nview == null || !___m_nview.IsValid()) return;
       }
 
       [HarmonyPrefix, HarmonyPatch(typeof(CookingStation), nameof(CookingStation.UpdateCooking))]
@@ -123,7 +129,8 @@ namespace Digitalroot.Valheim.EternalFire
       {
         if (___m_nview.IsValid() && Main.ConfigCheck(__instance.name))
         {
-          __result = "<color=#FFFF0088><b>Eternal</b></color>";
+          __result = $"<color={Main.TextColor.Value}><b>$mod_eternal_fire_hover_text</b></color>";
+          __result = Localization.instance.Localize(__result);
         }
       }
 
@@ -192,7 +199,8 @@ namespace Digitalroot.Valheim.EternalFire
       {
         if (___m_nview.IsValid() && Main.ConfigCheck(__instance.name))
         {
-          __result = "<color=#FFFF0088><b>Eternal</b></color>";
+          __result = $"<color={Main.TextColor.Value}><b>$mod_eternal_fire_hover_text</b></color>";
+          __result = Localization.instance.Localize(__result);
         }
       }
 

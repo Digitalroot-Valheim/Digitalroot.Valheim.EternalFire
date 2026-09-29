@@ -14,9 +14,9 @@
       },
       "Digitalroot.Valheim.Modding.Framework": {
         "type": "Direct",
-        "requested": "[1.0.4, )",
-        "resolved": "1.0.4",
-        "contentHash": "j/PlRdFaOLbMo7ri6WW05OBGnJnZl3Gui/vdNbrRKH6fs5WbfV0ipQO9EdihOuE8AKKjwcfP39ZMTCSQp8JB9w==",
+        "requested": "[1.0.7, )",
+        "resolved": "1.0.7",
+        "contentHash": "HpTG/YFDZosD321+rkEn23Tsr9u2oUWhKgoHxhVUhcr6Lmh6/aUc8nisZkewDeuoKJUzrcMD1e33oKYnTbL6Lw==",
         "dependencies": {
           "Digitalroot.References.Unity": "6000.0.75",
           "Digitalroot.Valheim.Common.References": "1.0.16",
