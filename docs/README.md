@@ -25,22 +25,24 @@ Keeps fires lit and burning without needing to fuel them.
 
 | Config                          | Category          | Data Type | Desc                                      |
 | ---                             | ---               | ---       | ---                                       |
-| Campfire                        | Fireplaces        | bool      | Enable Campfire                           |
 | Bonfire                         | Fireplaces        | bool      | Enable Bonfire                            |
-| Sconce                          | Fireplaces        | bool      | Enable Sconce                             |
-| StandingWoodTorch               | Fireplaces        | bool      | Enable Standing Wood Torch                |
-| StandingIronTorch               | Fireplaces        | bool      | Enable Standing Iron Torch                |
-| StandingGreenBurningIronTorch   | Fireplaces        | bool      | Enable Standing Green Burning Iron Torch  |
-| StandingBlueBurningIronTorch    | Fireplaces        | bool      | Enable Standing Blue Burning Iron Torch   |
-| StandingBrazier                 | Fireplaces        | bool      | Enable Standing Brazier                   |
+| Campfire                        | Fireplaces        | bool      | Enable Campfire                           |
+| CandleResin                     | Fireplaces        | bool      | Enable Resin Candle                       |
 | HangingBrazier                  | Fireplaces        | bool      | Enable Hanging Brazier                    |
 | Hearth                          | Fireplaces        | bool      | Enable Hearth                             |
-| HotTub                          | Smelters          | bool      | Enable Hot Tub                            |
 | JackOTurnip                     | Fireplaces        | bool      | Enable Jack O' Turnip                     |
+| Sconce                          | Fireplaces        | bool      | Enable Sconce                             |
+| SnowLantern                     | Fireplaces        | bool      | Enable Snow Lantern                       |
+| StandingBlueBurningIronTorch    | Fireplaces        | bool      | Enable Standing Blue Burning Iron Torch   |
+| StandingBrazier                 | Fireplaces        | bool      | Enable Standing Brazier                   |
+| StandingGreenBurningIronTorch   | Fireplaces        | bool      | Enable Standing Green Burning Iron Torch  |
+| StandingIronTorch               | Fireplaces        | bool      | Enable Standing Iron Torch                |
+| StandingWoodTorch               | Fireplaces        | bool      | Enable Standing Wood Torch                |
 | StoneOven                       | Cooking Stations  | bool      | Enable Stone Oven                         |
-| Smelter                         | Smelters          | bool      | Enable Smelter                            |
 | BlastFurnace                    | Smelters          | bool      | Enable Blast Furnace                      |
 | EitrRefinery                    | Smelters          | bool      | Enable Eitr Refinery                      |
+| HotTub                          | Smelters          | bool      | Enable Hot Tub                            |
+| Smelter                         | Smelters          | bool      | Enable Smelter                            |
 | CustomPrefabs                   | Custom            | string    | A comma-separated list of prefab names    |
 
 ###### Add to server to enforce configs. 
