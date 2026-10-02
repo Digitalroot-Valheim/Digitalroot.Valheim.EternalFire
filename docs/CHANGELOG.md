@@ -1,3 +1,10 @@
+## v1.1.6
+- Fix bug with custom prefabs
+- Added native for [BoneAppetit](https://www.nexusmods.com/valheim/mods/1250) Smokeless Fire Sources
+- Fixed bug with unknown `CookingStation`
+- Fixed bug with fuel levels and bulk processing
+- Removed an exploit around refunding fuel. 
+
 ## v1.1.5
 - Added localization for the hovertext.
 - Added config for the color of the hovertext.

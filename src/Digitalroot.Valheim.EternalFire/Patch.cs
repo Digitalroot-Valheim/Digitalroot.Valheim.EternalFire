@@ -1,5 +1,7 @@
-﻿using HarmonyLib;
+﻿using Digitalroot.Modding.Framework.Logging;
+using HarmonyLib;
 using JetBrains.Annotations;
+using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using DMF = Digitalroot.Modding.Framework;
@@ -46,13 +48,6 @@ namespace Digitalroot.Valheim.EternalFire
             ___m_nview.InvokeRPC(nameof(FireplaceExtensions.RPC_DisableEternal));
           }
         }
-
-        if (__instance.IsEternal() && ___m_nview.GetZDO().GetFloat(ZDOVars.s_fuel) < 1f)
-        {
-          // Tell the owner to add fuel to the Fireplace
-          ___m_nview.InvokeRPC(nameof(Fireplace.RPC_AddFuel));
-        }
-
       }
 
       [HarmonyPostfix, HarmonyPatch(typeof(Fireplace), nameof(Fireplace.GetHoverText))]
@@ -69,8 +64,8 @@ namespace Digitalroot.Valheim.EternalFire
           else if (__instance.m_canRefill)
           {
             __result += "\n[<color=yellow><b>$KEY_HotbarUse</b></color>] $piece_useitem";
-
           }
+
           __result += $"\n<color={Main.TextColor.Value}><b>$mod_eternal_fire_hover_text</b></color>";
           __result = Localization.instance.Localize(__result);
         }
@@ -95,7 +90,7 @@ namespace Digitalroot.Valheim.EternalFire
       [HarmonyPrefix, HarmonyPatch(typeof(CookingStation), nameof(CookingStation.UpdateCooking))]
       private static void PrefixUpdateCooking(CookingStation __instance, ZNetView ___m_nview)
       {
-        if (___m_nview == null || !___m_nview.IsValid()) return;
+        if (___m_nview == null || !___m_nview.IsValid() || __instance.m_fuelItem == null || !__instance.m_useFuel) return;
 
         // if mod is enabled
         if (Main.ConfigCheck(__instance.name)) // Is the CookingStation enabled in the mod's config.
@@ -116,18 +111,12 @@ namespace Digitalroot.Valheim.EternalFire
             ___m_nview.InvokeRPC(nameof(CookingStationExtensions.RPC_DisableEternal));
           }
         }
-
-        if (__instance.IsEternal() && __instance.GetFuel() == 0f)
-        {
-          // Tell the owner to add fuel to the CookingStation
-          ___m_nview.InvokeRPC(nameof(CookingStation.RPC_AddFuel));
-        }
       }
 
       [HarmonyPostfix, HarmonyPatch(typeof(CookingStation), nameof(CookingStation.OnHoverFuelSwitch))]
       private static void PostfixOnHoverFuelSwitch(CookingStation __instance, ZNetView ___m_nview, ref string __result)
       {
-        if (___m_nview.IsValid() && Main.ConfigCheck(__instance.name))
+        if (___m_nview.IsValid() && Main.ConfigCheck(__instance.name) && __instance.IsEternal())
         {
           __result = $"<color={Main.TextColor.Value}><b>$mod_eternal_fire_hover_text</b></color>";
           __result = Localization.instance.Localize(__result);
@@ -137,13 +126,81 @@ namespace Digitalroot.Valheim.EternalFire
       [HarmonyPrefix, HarmonyPatch(typeof(CookingStation), nameof(CookingStation.OnAddFuelSwitch))]
       private static bool PostfixOnAddFuelSwitch(CookingStation __instance, ZNetView ___m_nview, ref bool __result)
       {
-        if (___m_nview.IsValid() && Main.ConfigCheck(__instance.name))
+        if (___m_nview.IsValid() && Main.ConfigCheck(__instance.name) && __instance.IsEternal())
         {
           __result = false;
           return false;
         }
 
         return true;
+      }
+
+      [HarmonyPrefix, HarmonyPatch(typeof(CookingStation), nameof(CookingStation.GetFuel))]
+      private static bool PostfixGetFuel(CookingStation __instance, ZNetView ___m_nview, ref float __result)
+      {
+        // DMF.Logging.Log.Trace(Main.Instance, $"{Main.Namespace}.{MethodBase.GetCurrentMethod()?.DeclaringType?.Name}.{MethodBase.GetCurrentMethod()?.Name} [{__instance.name.Replace("(Clone)", string.Empty)}][{__result}]");
+        if (___m_nview.IsValid() && Main.ConfigCheck(__instance.name) && __instance.IsEternal())
+        {
+          __result = __instance.m_maxFuel;
+          return false;
+        }
+
+        return true;
+      }
+    }
+
+    [HarmonyPatch(typeof(CookingStation))]
+    public static class PatchCookingStation_DropAllItems_DropPatch
+    {
+      [UsedImplicitly]
+      private static MethodBase TargetMethod()
+      {
+        try
+        {
+          Log.Trace(Main.Instance, $"{Main.Namespace}.{MethodBase.GetCurrentMethod()?.DeclaringType?.Name}.{MethodBase.GetCurrentMethod()?.Name}");
+          return AccessTools.Method(typeof(CookingStation), "<DropAllItems>g__drop|1_0");
+        }
+        catch (Exception e)
+        {
+          Log.Error(Main.Instance, e);
+        }
+
+        return null;
+      }
+
+      [HarmonyPrefix, UsedImplicitly]
+      private static bool Prefix(CookingStation __instance, ZNetView ___m_nview, ItemDrop item, bool cheated)
+      {
+        try
+        {
+          Log.Trace(Main.Instance, $"{Main.Namespace}.{MethodBase.GetCurrentMethod()?.DeclaringType?.Name}.{MethodBase.GetCurrentMethod()?.Name}");
+          if (!___m_nview.IsValid()) return true; // If not valid, then skip this patch but continue method chain.
+
+          if (__instance.IsEternal())
+          {
+            // Only drop original fuel
+            for (var i = __instance.m_nview.GetZDO().GetFloat($"{Main.Guid}_currentFuelLevel".GetStableHashCode()); i >= 1f; i--)
+            {
+              CallOriginal(__instance, item, cheated);
+            }
+            __instance.m_nview.GetZDO().Set($"{Main.Guid}_currentFuelLevel".GetStableHashCode(), 0f); // Reset
+          }
+
+          return !__instance.IsEternal(); // If eternal, do not drop fuel when OnDestroyed is called.
+        }
+        catch (Exception e)
+        {
+          Log.Error(Main.Instance, e);
+        }
+
+        return true;
+      }
+
+      [HarmonyReversePatch]
+      public static void CallOriginal(CookingStation instance, ItemDrop item, bool cheated)
+      {
+        // Harmony replaces this body with the original method's IL at patch time.
+        throw new NotImplementedException("HarmonyReversePatch");
       }
     }
 
@@ -186,18 +243,12 @@ namespace Digitalroot.Valheim.EternalFire
             ___m_nview.InvokeRPC(nameof(SmelterExtensions.RPC_DisableEternal));
           }
         }
-
-        if (__instance.IsEternal() && __instance.GetFuel() == 0f)
-        {
-          // Tell the owner to add fuel to the Smelter
-          ___m_nview.InvokeRPC(nameof(Smelter.RPC_AddFuel));
-        }
       }
 
       [HarmonyPostfix, HarmonyPatch(typeof(Smelter), nameof(Smelter.OnHoverAddFuel))]
       private static void PostfixOnHoverAddFuel(Smelter __instance, ZNetView ___m_nview, ref string __result)
       {
-        if (___m_nview.IsValid() && Main.ConfigCheck(__instance.name))
+        if (___m_nview.IsValid() && Main.ConfigCheck(__instance.name) && __instance.IsEternal())
         {
           __result = $"<color={Main.TextColor.Value}><b>$mod_eternal_fire_hover_text</b></color>";
           __result = Localization.instance.Localize(__result);
@@ -207,9 +258,23 @@ namespace Digitalroot.Valheim.EternalFire
       [HarmonyPrefix, HarmonyPatch(typeof(Smelter), nameof(Smelter.OnAddFuel))]
       private static bool PostfixOnAddFuel(Smelter __instance, ZNetView ___m_nview, ref bool __result)
       {
-        if (___m_nview.IsValid() && Main.ConfigCheck(__instance.name))
+        if (___m_nview.IsValid() && Main.ConfigCheck(__instance.name) && __instance.IsEternal())
         {
           __result = false;
+          return false;
+        }
+
+        return true;
+      }
+
+      [HarmonyPrefix, HarmonyPatch(typeof(Smelter), nameof(Smelter.GetFuel))]
+      private static bool PostfixGetFuel(Smelter __instance, ZNetView ___m_nview, ref float __result)
+      {
+        // DMF.Logging.Log.Trace(Main.Instance, $"{Main.Namespace}.{MethodBase.GetCurrentMethod()?.DeclaringType?.Name}.{MethodBase.GetCurrentMethod()?.Name} [{__instance.name.Replace("(Clone)", string.Empty)}][{__result}]");
+        if (___m_nview.IsValid() && Main.ConfigCheck(__instance.name) && __instance.IsEternal())
+        {
+          __result = __instance.m_maxFuel;
+
           return false;
         }
 
@@ -252,7 +317,7 @@ namespace Digitalroot.Valheim.EternalFire
         return;
       }
 
-      DMF.Logging.Log.Trace(Main.Instance, $"{Main.Namespace}.{MethodBase.GetCurrentMethod()?.DeclaringType?.Name}.{MethodBase.GetCurrentMethod()?.Name}");
+      Log.Trace(Main.Instance, $"{Main.Namespace}.{MethodBase.GetCurrentMethod()?.DeclaringType?.Name}.{MethodBase.GetCurrentMethod()?.Name}");
       fireplace.m_nview.GetZDO().Set(Main.Guid.GetStableHashCode(), true);
       fireplace.m_infiniteFuel = true;
     }
@@ -274,7 +339,7 @@ namespace Digitalroot.Valheim.EternalFire
         return;
       }
 
-      DMF.Logging.Log.Trace(Main.Instance, $"{Main.Namespace}.{MethodBase.GetCurrentMethod()?.DeclaringType?.Name}.{MethodBase.GetCurrentMethod()?.Name}");
+      Log.Trace(Main.Instance, $"{Main.Namespace}.{MethodBase.GetCurrentMethod()?.DeclaringType?.Name}.{MethodBase.GetCurrentMethod()?.Name}");
       fireplace.m_nview.GetZDO().Set(Main.Guid.GetStableHashCode(), false);
       fireplace.m_infiniteFuel = false;
       if (fireplace.m_nview.GetZDO().GetFloat(ZDOVars.s_fuel) <= 1f)
@@ -316,8 +381,10 @@ namespace Digitalroot.Valheim.EternalFire
         return;
       }
 
-      DMF.Logging.Log.Trace(Main.Instance, $"{Main.Namespace}.{MethodBase.GetCurrentMethod()?.DeclaringType?.Name}.{MethodBase.GetCurrentMethod()?.Name}");
+      Log.Trace(Main.Instance, $"{Main.Namespace}.{MethodBase.GetCurrentMethod()?.DeclaringType?.Name}.{MethodBase.GetCurrentMethod()?.Name}");
+      cookingStation.m_nview.GetZDO().Set($"{Main.Guid}_currentFuelLevel".GetStableHashCode(), cookingStation.GetFuel());
       cookingStation.m_nview.GetZDO().Set(Main.Guid.GetStableHashCode(), true);
+      cookingStation.SetFuel(0f); // Remove all fuel
     }
 
     /// <summary>
@@ -337,12 +404,10 @@ namespace Digitalroot.Valheim.EternalFire
         return;
       }
 
-      DMF.Logging.Log.Trace(Main.Instance, $"{Main.Namespace}.{MethodBase.GetCurrentMethod()?.DeclaringType?.Name}.{MethodBase.GetCurrentMethod()?.Name}");
+      Log.Trace(Main.Instance, $"{Main.Namespace}.{MethodBase.GetCurrentMethod()?.DeclaringType?.Name}.{MethodBase.GetCurrentMethod()?.Name}");
       cookingStation.m_nview.GetZDO().Set(Main.Guid.GetStableHashCode(), false);
-      if (cookingStation.GetFuel() <= 1f)
-      {
-        cookingStation.SetFuel(0f);
-      }
+      cookingStation.SetFuel(cookingStation.m_nview.GetZDO().GetFloat($"{Main.Guid}_currentFuelLevel".GetStableHashCode())); // Restore removed fuel
+      cookingStation.m_nview.GetZDO().Set($"{Main.Guid}_currentFuelLevel".GetStableHashCode(), 0f);                          // Reset 
     }
   }
 
@@ -378,8 +443,11 @@ namespace Digitalroot.Valheim.EternalFire
         return;
       }
 
-      DMF.Logging.Log.Trace(Main.Instance, $"{Main.Namespace}.{MethodBase.GetCurrentMethod()?.DeclaringType?.Name}.{MethodBase.GetCurrentMethod()?.Name}");
+      Log.Trace(Main.Instance, $"{Main.Namespace}.{MethodBase.GetCurrentMethod()?.DeclaringType?.Name}.{MethodBase.GetCurrentMethod()?.Name}");
+      // Save the current fuel level so we can restore it on disable.
+      smelter.m_nview.GetZDO().Set($"{Main.Guid}_currentFuelLevel".GetStableHashCode(), smelter.GetFuel());
       smelter.m_nview.GetZDO().Set(Main.Guid.GetStableHashCode(), true);
+      smelter.SetFuel(0f); // Remove all fuel
     }
 
     /// <summary>
@@ -399,12 +467,10 @@ namespace Digitalroot.Valheim.EternalFire
         return;
       }
 
-      DMF.Logging.Log.Trace(Main.Instance, $"{Main.Namespace}.{MethodBase.GetCurrentMethod()?.DeclaringType?.Name}.{MethodBase.GetCurrentMethod()?.Name}");
+      Log.Trace(Main.Instance, $"{Main.Namespace}.{MethodBase.GetCurrentMethod()?.DeclaringType?.Name}.{MethodBase.GetCurrentMethod()?.Name}");
       smelter.m_nview.GetZDO().Set(Main.Guid.GetStableHashCode(), false);
-      if (smelter.GetFuel() <= 1f)
-      {
-        smelter.SetFuel(0f);
-      }
+      smelter.SetFuel(smelter.m_nview.GetZDO().GetFloat($"{Main.Guid}_currentFuelLevel".GetStableHashCode())); // Restore removed fuel
+      smelter.m_nview.GetZDO().Set($"{Main.Guid}_currentFuelLevel".GetStableHashCode(), 0f);                   // Reset 
     }
   }
 }

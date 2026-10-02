@@ -5,6 +5,7 @@ using HarmonyLib;
 using JetBrains.Annotations;
 using Jotunn.Utils;
 using System;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
@@ -22,9 +23,13 @@ namespace Digitalroot.Valheim.EternalFire
 
     [UsedImplicitly]
     public static ConfigEntry<int> NexusId { get; private set; }
+
     public static ConfigEntry<string> TextColor { get; private set; }
     private static ConfigEntry<bool> _configCandleResin;
     private static ConfigEntry<bool> _configSnowLantern;
+    private static ConfigEntry<bool> _configSmokeLessFirePit;
+    private static ConfigEntry<bool> _configSmokelessHearth;
+    private static ConfigEntry<bool> _configPieceSmokelessBrazierCeiling01;
     private static ConfigEntry<bool> _configFirePit;
     private static ConfigEntry<bool> _configIronFirePit;
     private static ConfigEntry<bool> _configBonfire;
@@ -64,9 +69,9 @@ namespace Digitalroot.Valheim.EternalFire
       {
         DMF.Logging.Log.Trace(Instance, $"{Namespace}.{MethodBase.GetCurrentMethod()?.DeclaringType?.Name}.{MethodBase.GetCurrentMethod()?.Name}");
         NexusId = Config.Bind(PluginConfigSection.General, "NexusID", 2754, new ConfigDescription("Nexus mod ID for updates", null, new ConfigurationManagerAttributes { Browsable = false, ReadOnly = true }));
-        TextColor = Config.Bind(PluginConfigSection.General, "Text Color", "#FFFF0088", new ConfigDescription("#RGBA Color for Eternal Text (#RRGGBBAA)", null, new ConfigurationManagerAttributes { Browsable = true, ReadOnly = false, IsAdvanced = true}));
-        _configCandleResin = Config.Bind(PluginConfigSection.Fireplaces,  nameof(DMF.Names.Vanilla.PrefabNames.CandleResin), true, new ConfigDescription($"Enable {nameof(DMF.Names.Vanilla.PrefabNames.CandleResin)}", null, new ConfigurationManagerAttributes { Browsable = true, ReadOnly = false, isAdminOnly = true }));
-        _configSnowLantern = Config.Bind(PluginConfigSection.Fireplaces,  "SnowLantern", true, new ConfigDescription("Enable Snow Lantern", null, new ConfigurationManagerAttributes { Browsable = true, ReadOnly = false, isAdminOnly = true }));
+        TextColor = Config.Bind(PluginConfigSection.General, "Text Color", "#FFFF0088", new ConfigDescription("#RGBA Color for Eternal Text (#RRGGBBAA)", null, new ConfigurationManagerAttributes { Browsable = true, ReadOnly = false, IsAdvanced = true }));
+        _configCandleResin = Config.Bind(PluginConfigSection.Fireplaces, nameof(DMF.Names.Vanilla.PrefabNames.CandleResin), true, new ConfigDescription($"Enable {nameof(DMF.Names.Vanilla.PrefabNames.CandleResin)}", null, new ConfigurationManagerAttributes { Browsable = true, ReadOnly = false, isAdminOnly = true }));
+        _configSnowLantern = Config.Bind(PluginConfigSection.Fireplaces, "SnowLantern", true, new ConfigDescription("Enable Snow Lantern", null, new ConfigurationManagerAttributes { Browsable = true, ReadOnly = false, isAdminOnly = true }));
         _configFirePit = Config.Bind(PluginConfigSection.Fireplaces, "CampFire", true, new ConfigDescription("Enable Campfire", null, new ConfigurationManagerAttributes { Browsable = true, ReadOnly = false, isAdminOnly = true }));
         _configIronFirePit = Config.Bind(PluginConfigSection.Fireplaces, "IronFirePit", true, new ConfigDescription("Enable Iron Fire Pit", null, new ConfigurationManagerAttributes { Browsable = true, ReadOnly = false, isAdminOnly = true }));
         _configBonfire = Config.Bind(PluginConfigSection.Fireplaces, nameof(DMF.Names.Vanilla.PrefabNames.Bonfire), true, new ConfigDescription($"Enable {nameof(DMF.Names.Vanilla.PrefabNames.Bonfire)}", null, new ConfigurationManagerAttributes { Browsable = true, ReadOnly = false, isAdminOnly = true }));
@@ -86,6 +91,15 @@ namespace Digitalroot.Valheim.EternalFire
         _configBlastFurnace = Config.Bind(PluginConfigSection.Smelters, "BlastFurnace", false, new ConfigDescription("Enable Blast Furnace", null, new ConfigurationManagerAttributes { Browsable = true, ReadOnly = false, isAdminOnly = true }));
         _configEitrRefinery = Config.Bind(PluginConfigSection.Smelters, "EitrRefinery", false, new ConfigDescription("Enable Eitr Refinery", null, new ConfigurationManagerAttributes { Browsable = true, ReadOnly = false, isAdminOnly = true }));
         _configCustomInstance = Config.Bind(PluginConfigSection.Custom, "CustomPrefabs", "", new ConfigDescription("A comma-separated list of prefab names", null, new ConfigurationManagerAttributes { Browsable = true, ReadOnly = false, isAdminOnly = true }));
+
+        #region com.rockerkitten.boneappetit configs
+
+        var isBoneAppetitLoaded = DMF.Utils.Utils.ValheimUtils.DoesPluginExist(@"com.rockerkitten.boneappetit");
+        _configSmokeLessFirePit = Config.Bind(PluginConfigSection.BoneAppetit, nameof(PluginConfigSection.SmokelessFirePit), true, new ConfigDescription($"Enable {PluginConfigSection.SmokelessFirePitName}", null, new ConfigurationManagerAttributes { Browsable = isBoneAppetitLoaded, ReadOnly = false, isAdminOnly = true }));
+        _configSmokelessHearth = Config.Bind(PluginConfigSection.BoneAppetit, nameof(PluginConfigSection.SmokelessHearth), true, new ConfigDescription($"Enable {PluginConfigSection.SmokelessHearthName}", null, new ConfigurationManagerAttributes { Browsable = isBoneAppetitLoaded, ReadOnly = false, isAdminOnly = true }));
+        _configPieceSmokelessBrazierCeiling01 = Config.Bind(PluginConfigSection.BoneAppetit, nameof(PluginConfigSection.SmokelessHangingBrazier), true, new ConfigDescription($"Enable {PluginConfigSection.SmokelessHangingBrazierName}", null, new ConfigurationManagerAttributes { Browsable = isBoneAppetitLoaded, ReadOnly = false, isAdminOnly = true }));
+
+        #endregion
 
         _harmony = Harmony.CreateAndPatchAll(typeof(Main).Assembly, Guid);
       }
@@ -109,10 +123,12 @@ namespace Digitalroot.Valheim.EternalFire
       }
     }
 
+    private static Stopwatch _unknownPreFabLogMessageTimeout = new();
+
     public static bool ConfigCheck(string instanceName)
     {
       bool EternalFuel = false;
-      instanceName = instanceName.Replace("(Clone)", string.Empty); 
+      instanceName = instanceName.Replace("(Clone)", string.Empty);
       switch (instanceName)
       {
         case DMF.Names.Vanilla.PrefabNames.FirePit:
@@ -195,14 +211,45 @@ namespace Digitalroot.Valheim.EternalFire
           EternalFuel = _configSnowLantern.Value;
           break;
 
-        default:
-          DMF.Logging.Log.Trace(Instance, $"{Namespace}.{MethodBase.GetCurrentMethod()?.DeclaringType?.Name}.{MethodBase.GetCurrentMethod()?.Name}[{instanceName}] Unknown");
+        case PluginConfigSection.SmokelessHearth:
+          EternalFuel = _configSmokelessHearth.Value;
           break;
-      }
 
-      if (_configCustomInstance.Value.Split(',').Contains(instanceName))
-      {
-        EternalFuel = true;
+        case PluginConfigSection.SmokelessFirePit:
+          EternalFuel = _configSmokeLessFirePit.Value;
+          break;
+
+        case PluginConfigSection.SmokelessHangingBrazier:
+          EternalFuel = _configPieceSmokelessBrazierCeiling01.Value;
+          break;
+
+        default:
+          if (_configCustomInstance.Value.Split(',').Contains(instanceName))
+          {
+            EternalFuel = true;
+          }
+          else
+          {
+            if (_unknownPreFabLogMessageTimeout == null) break;
+
+            if (!_unknownPreFabLogMessageTimeout.IsRunning)
+            {
+              DMF.Logging.Log.Trace(Instance, $"{Namespace}.{MethodBase.GetCurrentMethod()?.DeclaringType?.Name}.{MethodBase.GetCurrentMethod()?.Name} Timer Start");
+              _unknownPreFabLogMessageTimeout.Start();
+            }
+
+            // Unknown
+            DMF.Logging.Log.Trace(Instance, $"{Namespace}.{MethodBase.GetCurrentMethod()?.DeclaringType?.Name}.{MethodBase.GetCurrentMethod()?.Name}[{_unknownPreFabLogMessageTimeout.Elapsed.Minutes}:{_unknownPreFabLogMessageTimeout.Elapsed.Seconds}][{instanceName}] Unknown");
+
+            if (_unknownPreFabLogMessageTimeout.Elapsed.Minutes >= 1)
+            {
+              DMF.Logging.Log.Trace(Instance, $"{Namespace}.{MethodBase.GetCurrentMethod()?.DeclaringType?.Name}.{MethodBase.GetCurrentMethod()?.Name} Timer End");
+              _unknownPreFabLogMessageTimeout.Stop();
+              _unknownPreFabLogMessageTimeout = null;
+            }
+          }
+
+          break;
       }
 
       // DMF.Logging.Log.Trace(Instance, $"{Namespace}.{MethodBase.GetCurrentMethod()?.DeclaringType?.Name}.{MethodBase.GetCurrentMethod()?.Name}[{instanceName}] {EternalFuel}");
