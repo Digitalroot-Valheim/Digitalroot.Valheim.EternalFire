@@ -1,3 +1,16 @@
+## v1.1.7
+- Improved [Valheim Community Patch](https://thunderstore.io/c/valheim/p/MidnightMods/ValheimCommunityPatch/) compatibility.
+- Refactored how unknown Fire Sources are tracked and logged, reducing Trace spam.
+- Fixed `IsEternal` bug in `Fireplace`, `CookingStation` and `Smelter` **Awake** patch.
+- Fixed `Owner` bug in `Fireplace`, `CookingStation` and `Smelter` **Update** patch.
+- Refactored refueling process for `Fireplace`, `CookingStation` and `Smelter`.
+- Fixed refueling bug when not all players are running **EternalFire**.
+- Known-Issue: When **EternalFire** is used with [VCP](https://thunderstore.io/c/valheim/p/MidnightMods/ValheimCommunityPatch/), 
+  if a player not running **EternalFire**, owns the *zNetView*, then fuel levels will not refresh. Ask the player to 
+  leave the area so ownership of the *zNetView* changes.
+- Added `RPC_SetFuelLevelMax` to `CookingStation` and `Smelter` for [VCP](https://thunderstore.io/c/valheim/p/MidnightMods/ValheimCommunityPatch/) compatibility.
+- Added `DropAllItems` patch for `CookingStation` and`Smelter` to only drop unspent player added fuel and not fuel added by **EternalFire**.
+
 ## v1.1.6
 - Fix bug with custom prefabs
 - Added native for [BoneAppetit](https://www.nexusmods.com/valheim/mods/1250) Smokeless Fire Sources

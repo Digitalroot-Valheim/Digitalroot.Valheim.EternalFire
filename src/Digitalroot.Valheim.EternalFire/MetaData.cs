@@ -13,6 +13,7 @@ namespace Digitalroot.Valheim.EternalFire
     internal static class PluginConfigSection
     {
       internal static readonly string General = nameof(General);
+      internal static readonly string Advanced = nameof(Advanced);
       internal static readonly string Fireplaces = nameof(Fireplaces);
       internal static readonly string CookingStations = nameof(CookingStations);
       internal static readonly string Smelters = nameof(Smelters);

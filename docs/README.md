@@ -44,8 +44,14 @@ Keeps fires lit and burning without needing to fuel them.
 | HotTub                          | Smelters          | bool      | Enable Hot Tub                            |
 | Smelter                         | Smelters          | bool      | Enable Smelter                            |
 | CustomPrefabs                   | Custom            | string    | A comma-separated list of prefab names    |
+| SmokeLessFirePit                | BoneAppetit       | bool      | Enable SmokeLessFirePit                   |
+| SmokelessHearth                 | BoneAppetit       | bool      | Enable SmokelessHearth                    |
+| SmokelessHangingBrazier         | BoneAppetit       | bool      | Enable Smelter                            |
 
-###### Add to server to enforce configs. 
+
+###### Add mod to server to enforce configs.
+
+------
 
 ### Crossplay <span class="checked">✔</span>
 | Point of View               | Server w/ Mod                   | Server w/o Mod                  | Client (PC) w/ mod              | Client (PC/Console) w/o mod     |

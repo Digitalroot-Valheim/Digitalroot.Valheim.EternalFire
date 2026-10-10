@@ -1,10 +1,13 @@
 ﻿using Digitalroot.Modding.Framework.Logging;
+using Digitalroot.Modding.Framework.Names.Vanilla;
 using HarmonyLib;
 using JetBrains.Annotations;
 using System;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
-using DMF = Digitalroot.Modding.Framework;
+using UnityEngine;
+using Random = UnityEngine.Random;
 
 namespace Digitalroot.Valheim.EternalFire
 {
@@ -20,54 +23,109 @@ namespace Digitalroot.Valheim.EternalFire
       [HarmonyPostfix, HarmonyPatch(typeof(Fireplace), nameof(Fireplace.Awake))]
       private static void PostfixAwake(Fireplace __instance, ZNetView ___m_nview)
       {
-        if (___m_nview == null || !___m_nview.IsValid()) return;
-        ___m_nview.Register(nameof(FireplaceExtensions.RPC_EnableEternal), __instance.RPC_EnableEternal);
-        ___m_nview.Register(nameof(FireplaceExtensions.RPC_DisableEternal), __instance.RPC_DisableEternal);
+        try
+        {
+          Log.Trace(Main.Instance, $"{Main.Namespace}.{MethodBase.GetCurrentMethod()?.DeclaringType?.Name}.{MethodBase.GetCurrentMethod()?.Name}");
+          if (___m_nview == null || !___m_nview.IsValid()) return;
+
+          ___m_nview.Register(nameof(FireplaceExtensions.RPC_EnableEternal), __instance.RPC_EnableEternal);
+          ___m_nview.Register(nameof(FireplaceExtensions.RPC_DisableEternal), __instance.RPC_DisableEternal);
+
+          __instance.SetIsEternal(__instance.IsEternal());
+        }
+        catch (Exception e)
+        {
+          Log.Error(Main.Instance, e);
+        }
       }
 
       [HarmonyPrefix, HarmonyPatch(typeof(Fireplace), nameof(Fireplace.UpdateFireplace))]
       private static void PrefixUpdateFireplace(Fireplace __instance, ZNetView ___m_nview)
       {
-        if (___m_nview == null || !___m_nview.IsValid()) return;
-
-        if (Main.ConfigCheck(__instance.name)) // Is the Fireplace enabled in the mod's config.
+        try
         {
-          // Fireplace is not tagged Eternal or m_infiniteFuel is not enabled. 
-          if (!__instance.IsEternal() || !__instance.m_infiniteFuel)
+          if (___m_nview == null || !___m_nview.IsValid()) return;
+
+          if (!___m_nview.HasOwner())
           {
-            // Tell the owner to tag Fireplace as Eternal and enable m_infiniteFuel.
-            ___m_nview.InvokeRPC(nameof(FireplaceExtensions.RPC_EnableEternal));
+            ___m_nview.ClaimOwnership();
+          }
+
+          if (Main.ConfigCheck(__instance.name)) // Is the Fireplace enabled in the mod's config.
+          {
+            // Fireplace is not tagged Eternal or m_infiniteFuel is not enabled. 
+            if (!__instance.IsEternal() || !__instance.m_infiniteFuel)
+            {
+              // Tell the owner to tag Fireplace as Eternal and enable m_infiniteFuel.
+              ___m_nview.InvokeRPC(nameof(FireplaceExtensions.RPC_EnableEternal));
+            }
+          }
+          else // The Fireplace is disabled in the mod's config.
+          {
+            // Fireplace is tagged Eternal or m_infiniteFuel is enabled. 
+            if (__instance.IsEternal() || __instance.m_infiniteFuel)
+            {
+              // Tell the owner to untag Fireplace as Eternal and disable m_infiniteFuel.
+              ___m_nview.InvokeRPC(nameof(FireplaceExtensions.RPC_DisableEternal));
+            }
+          }
+
+          if (__instance.IsEternal() && __instance.GetFuel() + 1 < __instance.m_maxFuel)
+          {
+            Log.Trace(Main.Instance, $"{Main.Namespace}.{MethodBase.GetCurrentMethod()?.DeclaringType?.Name}.{MethodBase.GetCurrentMethod()?.Name} [Adding Fuel to {__instance.name}]");
+            // Tell the owner to add fuel to the Fireplace
+            ___m_nview.InvokeRPC(nameof(Fireplace.RPC_AddFuelAmount), __instance.m_maxFuel - __instance.GetFuel());
+            #if DEBUG
+            __instance.TriggerLocator();
+            #endif
           }
         }
-        else // The Fireplace is disabled in the mod's config.
+        catch (Exception e)
         {
-          // Fireplace is tagged Eternal or m_infiniteFuel is enabled. 
-          if (__instance.IsEternal() || __instance.m_infiniteFuel)
-          {
-            // Tell the owner to untag Fireplace as Eternal and disable m_infiniteFuel.
-            ___m_nview.InvokeRPC(nameof(FireplaceExtensions.RPC_DisableEternal));
-          }
+          Log.Error(Main.Instance, e);
         }
       }
 
       [HarmonyPostfix, HarmonyPatch(typeof(Fireplace), nameof(Fireplace.GetHoverText))]
       private static void PostfixGetHoverText(Fireplace __instance, ZNetView ___m_nview, ref string __result)
       {
-        // DMF.Logging.Log.Trace(Main.Instance, $"{Main.Namespace}.{MethodBase.GetCurrentMethod()?.DeclaringType?.Name}.{MethodBase.GetCurrentMethod()?.Name} [{__instance.name}]");
-        if (___m_nview.IsValid() && __instance.IsEternal() && __instance.m_infiniteFuel)
+        try
         {
-          __result = __instance.m_name;
-          if (__instance.name.Replace("(Clone)", string.Empty) == DMF.Names.Vanilla.PrefabNames.CandleResin)
+          if (___m_nview == null || !___m_nview.IsValid()) return;
+
+          // DMF.Logging.Log.Trace(Main.Instance, $"{Main.Namespace}.{MethodBase.GetCurrentMethod()?.DeclaringType?.Name}.{MethodBase.GetCurrentMethod()?.Name} [{__instance.name}]");
+          if (__instance.IsEternal() && __instance.m_infiniteFuel)
           {
-            __result += "\n[<color=yellow><b>$KEY_Use</b></color>] $piece_use";
-          }
-          else if (__instance.m_canRefill)
-          {
-            __result += "\n[<color=yellow><b>$KEY_HotbarUse</b></color>] $piece_useitem";
+            __result = __instance.m_name;
+            if (__instance.name.Replace("(Clone)", string.Empty) == PrefabNames.CandleResin)
+            {
+              __result += "\n[<color=yellow><b>$KEY_Use</b></color>] $piece_use";
+            }
+            else if (__instance.m_canRefill)
+            {
+              __result += "\n[<color=yellow><b>$KEY_HotbarUse</b></color>] $piece_useitem";
+            }
+
+            __result += $"\n<color={Main.TextColor.Value}><b>$mod_eternal_fire_hover_text</b></color>";
+
+            if (Main.DisplayDebugInfo.Value)
+            {
+              __result += $"\n( $piece_fire_fuel {Mathf.Ceil(___m_nview.GetZDO().GetFloat(ZDOVars.s_fuel))}/{__instance.m_maxFuel} )";
+            }
+
+            __result = Localization.instance.Localize(__result);
           }
 
-          __result += $"\n<color={Main.TextColor.Value}><b>$mod_eternal_fire_hover_text</b></color>";
-          __result = Localization.instance.Localize(__result);
+          if (Main.DisplayDebugInfo.Value)
+          {
+            __result += $"\nIsEternalZdo: {__instance.GetIsEternal()}";
+            __result += $"\nOriginalFuelLevelZdo: {__instance.GetOriginalFuelLevel()}";
+            __result += $"\nIsVPCInstalled: {Main.IsVpcInstalled}";
+          }
+        }
+        catch (Exception e)
+        {
+          Log.Error(Main.Instance, e);
         }
       }
     }
@@ -82,67 +140,121 @@ namespace Digitalroot.Valheim.EternalFire
       [HarmonyPostfix, HarmonyPatch(typeof(CookingStation), nameof(CookingStation.Awake))]
       private static void PostfixAwake(CookingStation __instance, ZNetView ___m_nview)
       {
-        if (___m_nview == null || !___m_nview.IsValid()) return;
-        ___m_nview.Register(nameof(CookingStationExtensions.RPC_EnableEternal), __instance.RPC_EnableEternal);
-        ___m_nview.Register(nameof(CookingStationExtensions.RPC_DisableEternal), __instance.RPC_DisableEternal);
+        try
+        {
+          Log.Trace(Main.Instance, $"{Main.Namespace}.{MethodBase.GetCurrentMethod()?.DeclaringType?.Name}.{MethodBase.GetCurrentMethod()?.Name}");
+          if (___m_nview == null || !___m_nview.IsValid()) return;
+          ___m_nview.Register(nameof(CookingStationExtensions.RPC_EnableEternal), __instance.RPC_EnableEternal);
+          ___m_nview.Register(nameof(CookingStationExtensions.RPC_DisableEternal), __instance.RPC_DisableEternal);
+          ___m_nview.Register(nameof(CookingStationExtensions.RPC_SetFuelLevelMax), __instance.RPC_SetFuelLevelMax);
+          __instance.SetIsEternal(__instance.IsEternal());
+        }
+        catch (Exception e)
+        {
+          Log.Error(Main.Instance, e);
+        }
       }
 
       [HarmonyPrefix, HarmonyPatch(typeof(CookingStation), nameof(CookingStation.UpdateCooking))]
       private static void PrefixUpdateCooking(CookingStation __instance, ZNetView ___m_nview)
       {
-        if (___m_nview == null || !___m_nview.IsValid() || __instance.m_fuelItem == null || !__instance.m_useFuel) return;
-
-        // if mod is enabled
-        if (Main.ConfigCheck(__instance.name)) // Is the CookingStation enabled in the mod's config.
+        try
         {
-          // If mod enabled and CookingStation is not Eternal. Enabled Eternal
-          if (!__instance.IsEternal())
+          // Log.Trace(Main.Instance, $"{Main.Namespace}.{MethodBase.GetCurrentMethod()?.DeclaringType?.Name}.{MethodBase.GetCurrentMethod()?.Name}");
+          if (___m_nview == null || !___m_nview.IsValid() || __instance.m_fuelItem == null || !__instance.m_useFuel) return;
+
+          if (!___m_nview.HasOwner())
           {
-            // Tell the owner to tag the CookingStation as Eternal
-            ___m_nview.InvokeRPC(nameof(CookingStationExtensions.RPC_EnableEternal));
+            ___m_nview.ClaimOwnership();
+          }
+
+          if (Main.ConfigCheck(__instance.name)) // Is the CookingStation enabled in the mod's config.
+          {
+            // CookingStation is not tagged Eternal.
+            if (!__instance.IsEternal())
+            {
+              // Tell the owner to tag the CookingStation as Eternal
+              ___m_nview.InvokeRPC(nameof(CookingStationExtensions.RPC_EnableEternal));
+            }
+          }
+          else // The CookingStation is disabled in the mod's config.
+          {
+            // CookingStation is tagged Eternal.
+            if (__instance.IsEternal())
+            {
+              // Tell the owner to untag the CookingStation as Eternal
+              ___m_nview.InvokeRPC(nameof(CookingStationExtensions.RPC_DisableEternal));
+            }
+          }
+
+          if (__instance.IsEternal() && __instance.GetFuel() + 1 < __instance.m_maxFuel)
+          {
+            Log.Trace(Main.Instance, $"{Main.Namespace}.{MethodBase.GetCurrentMethod()?.DeclaringType?.Name}.{MethodBase.GetCurrentMethod()?.Name} [RPC_SetFuelLevelMax for {__instance.name}]");
+
+            // Tell the owner to add fuel to the CookingStation
+            if (Main.IsVpcInstalled)
+            {
+              ___m_nview.InvokeRPC(nameof(CookingStationExtensions.RPC_SetFuelLevelMax));
+            }
+            else
+            {
+              ___m_nview.InvokeRPC(nameof(CookingStation.RPC_AddFuel));
+            }
           }
         }
-        else // The CookingStation is disabled in the mod's config.
+        catch (Exception e)
         {
-          // CookingStation is Eternal. Disable Eternal
-          if (__instance.IsEternal())
-          {
-            // Tell the owner to untag the CookingStation as Eternal
-            ___m_nview.InvokeRPC(nameof(CookingStationExtensions.RPC_DisableEternal));
-          }
+          Log.Error(Main.Instance, e);
         }
       }
 
       [HarmonyPostfix, HarmonyPatch(typeof(CookingStation), nameof(CookingStation.OnHoverFuelSwitch))]
       private static void PostfixOnHoverFuelSwitch(CookingStation __instance, ZNetView ___m_nview, ref string __result)
       {
-        if (___m_nview.IsValid() && Main.ConfigCheck(__instance.name) && __instance.IsEternal())
+        try
         {
-          __result = $"<color={Main.TextColor.Value}><b>$mod_eternal_fire_hover_text</b></color>";
-          __result = Localization.instance.Localize(__result);
+          if (___m_nview == null || !___m_nview.IsValid()) return;
+
+          // Log.Trace(Main.Instance, $"{Main.Namespace}.{MethodBase.GetCurrentMethod()?.DeclaringType?.Name}.{MethodBase.GetCurrentMethod()?.Name}");
+          if (__instance.IsEternal())
+          {
+            __result = $"<color={Main.TextColor.Value}><b>$mod_eternal_fire_hover_text</b></color>";
+            if (Main.DisplayDebugInfo.Value)
+            {
+              __result += $"\n( $piece_fire_fuel {Mathf.Ceil(__instance.GetFuel())}/{__instance.m_maxFuel} )";
+            }
+
+            __result = Localization.instance.Localize(__result);
+          }
+
+          if (Main.DisplayDebugInfo.Value)
+          {
+            __result += $"\nIsEternalZdo: {__instance.GetIsEternal()}";
+            __result += $"\nOriginalFuelLevelZdo: {__instance.GetOriginalFuelLevel()}";
+            __result += $"\nIsVPCInstalled: {Main.IsVpcInstalled}";
+          }
+        }
+        catch (Exception e)
+        {
+          Log.Error(Main.Instance, e);
         }
       }
 
       [HarmonyPrefix, HarmonyPatch(typeof(CookingStation), nameof(CookingStation.OnAddFuelSwitch))]
       private static bool PostfixOnAddFuelSwitch(CookingStation __instance, ZNetView ___m_nview, ref bool __result)
       {
-        if (___m_nview.IsValid() && Main.ConfigCheck(__instance.name) && __instance.IsEternal())
+        try
         {
-          __result = false;
-          return false;
+          // Log.Trace(Main.Instance, $"{Main.Namespace}.{MethodBase.GetCurrentMethod()?.DeclaringType?.Name}.{MethodBase.GetCurrentMethod()?.Name}");
+          if (___m_nview.IsValid() && Main.ConfigCheck(__instance.name) && __instance.IsEternal())
+          {
+            __result = false;
+            return false;
+          }
         }
-
-        return true;
-      }
-
-      [HarmonyPrefix, HarmonyPatch(typeof(CookingStation), nameof(CookingStation.GetFuel))]
-      private static bool PostfixGetFuel(CookingStation __instance, ZNetView ___m_nview, ref float __result)
-      {
-        // DMF.Logging.Log.Trace(Main.Instance, $"{Main.Namespace}.{MethodBase.GetCurrentMethod()?.DeclaringType?.Name}.{MethodBase.GetCurrentMethod()?.Name} [{__instance.name.Replace("(Clone)", string.Empty)}][{__result}]");
-        if (___m_nview.IsValid() && Main.ConfigCheck(__instance.name) && __instance.IsEternal())
+        catch (Exception e)
         {
-          __result = __instance.m_maxFuel;
-          return false;
+          Log.Error(Main.Instance, e);
         }
 
         return true;
@@ -168,13 +280,13 @@ namespace Digitalroot.Valheim.EternalFire
         return null;
       }
 
-      [HarmonyPrefix, UsedImplicitly]
+      [HarmonyPrefix, UsedImplicitly] // Target Method is defined above.
       private static bool Prefix(CookingStation __instance, ZNetView ___m_nview, ItemDrop item, bool cheated)
       {
         try
         {
           Log.Trace(Main.Instance, $"{Main.Namespace}.{MethodBase.GetCurrentMethod()?.DeclaringType?.Name}.{MethodBase.GetCurrentMethod()?.Name}");
-          if (!___m_nview.IsValid()) return true; // If not valid, then skip this patch but continue method chain.
+          if (___m_nview == null || !___m_nview.IsValid()) return true; // If not valid, then skip this patch but continue method chain.
 
           if (__instance.IsEternal())
           {
@@ -183,10 +295,10 @@ namespace Digitalroot.Valheim.EternalFire
             {
               CallOriginal(__instance, item, cheated);
             }
-            __instance.m_nview.GetZDO().Set($"{Main.Guid}_currentFuelLevel".GetStableHashCode(), 0f); // Reset
-          }
 
-          return !__instance.IsEternal(); // If eternal, do not drop fuel when OnDestroyed is called.
+            __instance.SetOriginalFuelLevel(0f); // Reset
+            return false;                        // If eternal, do not drop fuel when OnDestroyed is called.
+          }
         }
         catch (Exception e)
         {
@@ -214,71 +326,141 @@ namespace Digitalroot.Valheim.EternalFire
       [HarmonyPostfix, HarmonyPatch(typeof(Smelter), nameof(Smelter.Awake))]
       private static void PostfixAwake(Smelter __instance, ZNetView ___m_nview)
       {
-        if (___m_nview == null || !___m_nview.IsValid()) return;
-        ___m_nview.Register(nameof(SmelterExtensions.RPC_EnableEternal), __instance.RPC_EnableEternal);
-        ___m_nview.Register(nameof(SmelterExtensions.RPC_DisableEternal), __instance.RPC_DisableEternal);
+        try
+        {
+          Log.Trace(Main.Instance, $"{Main.Namespace}.{MethodBase.GetCurrentMethod()?.DeclaringType?.Name}.{MethodBase.GetCurrentMethod()?.Name}");
+          if (___m_nview == null || !___m_nview.IsValid()) return;
+          ___m_nview.Register(nameof(SmelterExtensions.RPC_EnableEternal), __instance.RPC_EnableEternal);
+          ___m_nview.Register(nameof(SmelterExtensions.RPC_DisableEternal), __instance.RPC_DisableEternal);
+          ___m_nview.Register(nameof(SmelterExtensions.RPC_SetFuelLevelMax), __instance.RPC_SetFuelLevelMax);
+          __instance.SetIsEternal(__instance.IsEternal());
+        }
+        catch (Exception e)
+        {
+          Log.Error(Main.Instance, e);
+        }
       }
 
       [HarmonyPrefix, HarmonyPatch(typeof(Smelter), nameof(Smelter.UpdateSmelter))]
       private static void PrefixUpdateSmelter(Smelter __instance, ZNetView ___m_nview)
       {
-        if (___m_nview == null || !___m_nview.IsValid()) return;
-
-        // if mod is enabled
-        if (Main.ConfigCheck(__instance.name)) // Is the Smelter enabled in the mod's config.
+        try
         {
-          // If mod enabled and Smelter is not Eternal. Enabled Eternal
-          if (!__instance.IsEternal())
+          if (___m_nview == null || !___m_nview.IsValid() || __instance.m_fuelItem == null) return;
+
+          if (!___m_nview.HasOwner())
           {
-            // Tell the owner to tag the Smelter as Eternal
-            ___m_nview.InvokeRPC(nameof(SmelterExtensions.RPC_EnableEternal));
+            ___m_nview.ClaimOwnership();
+          }
+
+          if (Main.ConfigCheck(__instance.name)) // Is the Smelter enabled in the mod's config.
+          {
+            // Smelter is not tagged Eternal.
+            if (!__instance.IsEternal())
+            {
+              // Tell the owner to tag the Smelter as Eternal
+              ___m_nview.InvokeRPC(nameof(SmelterExtensions.RPC_EnableEternal));
+            }
+          }
+          else // The Smelter is disabled in the mod's config.
+          {
+            // Smelter is tagged Eternal.
+            if (__instance.IsEternal())
+            {
+              // Tell the owner to untag the Smelter as Eternal
+              ___m_nview.InvokeRPC(nameof(SmelterExtensions.RPC_DisableEternal));
+            }
+          }
+
+          if (__instance.IsEternal() && __instance.GetFuel() + 1 < __instance.m_maxFuel)
+          {
+            Log.Trace(Main.Instance, $"{Main.Namespace}.{MethodBase.GetCurrentMethod()?.DeclaringType?.Name}.{MethodBase.GetCurrentMethod()?.Name} [RPC_SetFuelLevelMax for {__instance.name}]");
+
+            // Tell the owner to add fuel to the Smelter
+            if (Main.IsVpcInstalled)
+            {
+              ___m_nview.InvokeRPC(nameof(SmelterExtensions.RPC_SetFuelLevelMax));
+            }
+            else
+            {
+              ___m_nview.InvokeRPC(nameof(Smelter.RPC_AddFuel));
+            }
           }
         }
-        else // The Smelter is disabled in the mod's config.
+        catch (Exception e)
         {
-          // Smelter is Eternal. Disable Eternal
-          if (__instance.IsEternal())
-          {
-            // Tell the owner to untag the Smelter as Eternal
-            ___m_nview.InvokeRPC(nameof(SmelterExtensions.RPC_DisableEternal));
-          }
+          Log.Error(Main.Instance, e);
         }
       }
 
       [HarmonyPostfix, HarmonyPatch(typeof(Smelter), nameof(Smelter.OnHoverAddFuel))]
       private static void PostfixOnHoverAddFuel(Smelter __instance, ZNetView ___m_nview, ref string __result)
       {
-        if (___m_nview.IsValid() && Main.ConfigCheck(__instance.name) && __instance.IsEternal())
+        try
         {
-          __result = $"<color={Main.TextColor.Value}><b>$mod_eternal_fire_hover_text</b></color>";
-          __result = Localization.instance.Localize(__result);
+          if (___m_nview == null || !___m_nview.IsValid()) return;
+
+          if (__instance.IsEternal())
+          {
+            __result = $"<color={Main.TextColor.Value}><b>$mod_eternal_fire_hover_text</b></color>";
+            if (Main.DisplayDebugInfo.Value)
+            {
+              __result += $"\n( $piece_fire_fuel {Mathf.Ceil(__instance.GetFuel())}/{__instance.m_maxFuel} )";
+            }
+
+            __result = Localization.instance.Localize(__result);
+          }
+
+          if (Main.DisplayDebugInfo.Value)
+          {
+            __result += $"\nIsEternalZdo: {__instance.GetIsEternal()}";
+            __result += $"\nOriginalFuelLevelZdo: {__instance.GetOriginalFuelLevel()}";
+            __result += $"\nIsVPCInstalled: {Main.IsVpcInstalled}";
+          }
+        }
+        catch (Exception e)
+        {
+          Log.Error(Main.Instance, e);
         }
       }
 
       [HarmonyPrefix, HarmonyPatch(typeof(Smelter), nameof(Smelter.OnAddFuel))]
-      private static bool PostfixOnAddFuel(Smelter __instance, ZNetView ___m_nview, ref bool __result)
+      private static bool PrefixOnAddFuel(Smelter __instance, ZNetView ___m_nview, ref bool __result)
       {
-        if (___m_nview.IsValid() && Main.ConfigCheck(__instance.name) && __instance.IsEternal())
+        try
         {
-          __result = false;
-          return false;
+          if (___m_nview == null || !___m_nview.IsValid()) return true;
+          if (__instance.IsEternal())
+          {
+            __result = false;
+            return false;
+          }
+        }
+        catch (Exception e)
+        {
+          Log.Error(Main.Instance, e);
         }
 
         return true;
       }
 
-      [HarmonyPrefix, HarmonyPatch(typeof(Smelter), nameof(Smelter.GetFuel))]
-      private static bool PostfixGetFuel(Smelter __instance, ZNetView ___m_nview, ref float __result)
+      [HarmonyPrefix, HarmonyPatch(typeof(Smelter), nameof(Smelter.DropAllItems))]
+      private static void PrefixDropAllItems(Smelter __instance, ZNetView ___m_nview)
       {
-        // DMF.Logging.Log.Trace(Main.Instance, $"{Main.Namespace}.{MethodBase.GetCurrentMethod()?.DeclaringType?.Name}.{MethodBase.GetCurrentMethod()?.Name} [{__instance.name.Replace("(Clone)", string.Empty)}][{__result}]");
-        if (___m_nview.IsValid() && Main.ConfigCheck(__instance.name) && __instance.IsEternal())
+        try
         {
-          __result = __instance.m_maxFuel;
-
-          return false;
+          Log.Trace(Main.Instance, $"{Main.Namespace}.{MethodBase.GetCurrentMethod()?.DeclaringType?.Name}.{MethodBase.GetCurrentMethod()?.Name}");
+          if (___m_nview == null || !___m_nview.IsValid()) return;
+          if (__instance.IsEternal())
+          {
+            __instance.SetFuel(__instance.GetOriginalFuelLevel() <= 1f ? 0f : __instance.GetOriginalFuelLevel());
+            __instance.SetOriginalFuelLevel(0f);
+          }
         }
-
-        return true;
+        catch (Exception e)
+        {
+          Log.Error(Main.Instance, e);
+        }
       }
     }
 
@@ -296,8 +478,17 @@ namespace Digitalroot.Valheim.EternalFire
     [UsedImplicitly]
     public static bool IsEternal(this Fireplace fireplace)
     {
-      if (!fireplace.m_nview.IsValid()) return false;
-      return fireplace.m_nview.GetZDO().GetBool(Main.Guid.GetStableHashCode());
+      try
+      {
+        if (!fireplace.m_nview.IsValid()) return false;
+        return fireplace.GetIsEternal();
+      }
+      catch (Exception e)
+      {
+        Log.Error(Main.Instance, e);
+      }
+
+      return false;
     }
 
     /// <summary>
@@ -308,18 +499,27 @@ namespace Digitalroot.Valheim.EternalFire
     [UsedImplicitly]
     public static void RPC_EnableEternal(this Fireplace fireplace, long sender)
     {
-      if (fireplace.m_nview == null
-          || !fireplace.m_nview.IsValid()
-          || !fireplace.m_nview.IsOwner()
-          || (fireplace.IsEternal() && fireplace.m_infiniteFuel)
-          || !Main.ConfigCheck(fireplace.name))
+      try
       {
-        return;
-      }
+        if (fireplace.m_nview == null
+            || !fireplace.m_nview.IsValid()
+            || !fireplace.m_nview.IsOwner()
+            || (fireplace.IsEternal() && fireplace.m_infiniteFuel)
+            || !Main.ConfigCheck(fireplace.name))
+        {
+          return;
+        }
 
-      Log.Trace(Main.Instance, $"{Main.Namespace}.{MethodBase.GetCurrentMethod()?.DeclaringType?.Name}.{MethodBase.GetCurrentMethod()?.Name}");
-      fireplace.m_nview.GetZDO().Set(Main.Guid.GetStableHashCode(), true);
-      fireplace.m_infiniteFuel = true;
+        Log.Trace(Main.Instance, $"{Main.Namespace}.{MethodBase.GetCurrentMethod()?.DeclaringType?.Name}.{MethodBase.GetCurrentMethod()?.Name}");
+        fireplace.SetIsEternal(true);
+        // Save the current fuel level so we can restore it on disable.
+        fireplace.SetOriginalFuelLevel(fireplace.GetFuel());
+        fireplace.SetFuel(fireplace.m_maxFuel); // Force Max Fuel
+      }
+      catch (Exception e)
+      {
+        Log.Error(Main.Instance, e);
+      }
     }
 
     /// <summary>
@@ -330,22 +530,83 @@ namespace Digitalroot.Valheim.EternalFire
     [UsedImplicitly]
     public static void RPC_DisableEternal(this Fireplace fireplace, long sender)
     {
-      if (fireplace.m_nview == null
-          || !fireplace.m_nview.IsValid()
-          || !fireplace.m_nview.IsOwner()
-          || (!fireplace.IsEternal() && !fireplace.m_infiniteFuel)
-          || Main.ConfigCheck(fireplace.name))
+      try
       {
-        return;
-      }
+        if (fireplace.m_nview == null
+            || !fireplace.m_nview.IsValid()
+            || !fireplace.m_nview.IsOwner()
+            || (!fireplace.IsEternal() && !fireplace.m_infiniteFuel)
+            || Main.ConfigCheck(fireplace.name))
+        {
+          return;
+        }
 
-      Log.Trace(Main.Instance, $"{Main.Namespace}.{MethodBase.GetCurrentMethod()?.DeclaringType?.Name}.{MethodBase.GetCurrentMethod()?.Name}");
-      fireplace.m_nview.GetZDO().Set(Main.Guid.GetStableHashCode(), false);
-      fireplace.m_infiniteFuel = false;
-      if (fireplace.m_nview.GetZDO().GetFloat(ZDOVars.s_fuel) <= 1f)
-      {
-        fireplace.SetFuel(0f);
+        Log.Trace(Main.Instance, $"{Main.Namespace}.{MethodBase.GetCurrentMethod()?.DeclaringType?.Name}.{MethodBase.GetCurrentMethod()?.Name}");
+        fireplace.SetIsEternal(false);
+        fireplace.SetFuel(fireplace.GetOriginalFuelLevel() <= 1f ? 0f : fireplace.GetOriginalFuelLevel()); // Restore removed fuel
+        fireplace.SetOriginalFuelLevel(0f);                                                                // Reset 
       }
+      catch (Exception e)
+      {
+        Log.Error(Main.Instance, e);
+      }
+    }
+
+    [UsedImplicitly]
+    public static float GetOriginalFuelLevel(this Fireplace fireplace)
+    {
+      if (!fireplace.m_nview.IsValid()) return 0f;
+      return fireplace.m_nview.GetZDO().GetFloat(Main.CurrentFuelLevelKey);
+    }
+
+    [UsedImplicitly]
+    public static void SetOriginalFuelLevel(this Fireplace fireplace, float value)
+    {
+      if (!fireplace.m_nview.IsValid()) return;
+      fireplace.m_nview.GetZDO().Set(Main.CurrentFuelLevelKey, value);
+    }
+
+    [UsedImplicitly]
+    public static float GetFuel(this Fireplace fireplace)
+    {
+      if (!fireplace.m_nview.IsValid()) return 0f;
+      return fireplace.m_nview.GetZDO().GetFloat(ZDOVars.s_fuel);
+    }
+
+    [UsedImplicitly]
+    public static void SetIsEternal(this Fireplace fireplace, bool value)
+    {
+      if (!fireplace.m_nview.IsValid()) return;
+      fireplace.m_nview.GetZDO().Set(Main.IsEternalKey, value);
+      fireplace.m_infiniteFuel = value;
+    }
+
+    [UsedImplicitly]
+    public static bool GetIsEternal(this Fireplace fireplace)
+    {
+      if (!fireplace.m_nview.IsValid()) return false;
+      return fireplace.m_nview.GetZDO().GetBool(Main.IsEternalKey);
+    }
+
+    [UsedImplicitly, Conditional("DEBUG")]
+    public static void TriggerLocator(this Fireplace fireplace)
+    {
+      if (!fireplace.m_nview.IsValid() || !fireplace.m_nview.IsOwner()) return;
+      if (fireplace.m_fireworkItemList == null || fireplace.m_fireworkItemList.Length < 4) return;
+
+      fireplace.m_fireworkItemList[3].m_fireworksEffects.Create(fireplace.transform.position
+                                                                , Quaternion.Euler(
+                                                                                   Random.Range(
+                                                                                                -fireplace.m_fireworksMaxRandomAngle
+                                                                                                , fireplace.m_fireworksMaxRandomAngle
+                                                                                               )
+                                                                                   , 0f
+                                                                                   , Random.Range(
+                                                                                                  -fireplace.m_fireworksMaxRandomAngle
+                                                                                                  , fireplace.m_fireworksMaxRandomAngle
+                                                                                                 )
+                                                                                  ));
+      fireplace.m_fuelAddedEffects.Create(fireplace.transform.position, fireplace.transform.rotation);
     }
   }
 
@@ -360,8 +621,17 @@ namespace Digitalroot.Valheim.EternalFire
     [UsedImplicitly]
     public static bool IsEternal(this CookingStation cookingStation)
     {
-      if (!cookingStation.m_nview.IsValid()) return false;
-      return cookingStation.m_nview.GetZDO().GetBool(Main.Guid.GetStableHashCode());
+      try
+      {
+        if (cookingStation.m_nview == null || !cookingStation.m_nview.IsValid()) return false;
+        return cookingStation.GetIsEternal();
+      }
+      catch (Exception e)
+      {
+        Log.Error(Main.Instance, e);
+      }
+
+      return false;
     }
 
     /// <summary>
@@ -372,19 +642,27 @@ namespace Digitalroot.Valheim.EternalFire
     [UsedImplicitly]
     public static void RPC_EnableEternal(this CookingStation cookingStation, long sender)
     {
-      if (cookingStation.m_nview == null
-          || !cookingStation.m_nview.IsValid()
-          || !cookingStation.m_nview.IsOwner()
-          || cookingStation.IsEternal()
-          || !Main.ConfigCheck(cookingStation.name))
+      try
       {
-        return;
-      }
+        if (cookingStation.m_nview == null
+            || !cookingStation.m_nview.IsValid()
+            || !cookingStation.m_nview.IsOwner()
+            || cookingStation.IsEternal()
+            || !Main.ConfigCheck(cookingStation.name))
+        {
+          return;
+        }
 
-      Log.Trace(Main.Instance, $"{Main.Namespace}.{MethodBase.GetCurrentMethod()?.DeclaringType?.Name}.{MethodBase.GetCurrentMethod()?.Name}");
-      cookingStation.m_nview.GetZDO().Set($"{Main.Guid}_currentFuelLevel".GetStableHashCode(), cookingStation.GetFuel());
-      cookingStation.m_nview.GetZDO().Set(Main.Guid.GetStableHashCode(), true);
-      cookingStation.SetFuel(0f); // Remove all fuel
+        Log.Trace(Main.Instance, $"{Main.Namespace}.{MethodBase.GetCurrentMethod()?.DeclaringType?.Name}.{MethodBase.GetCurrentMethod()?.Name}");
+        // Save the current fuel level so we can restore it on disable.
+        cookingStation.SetOriginalFuelLevel(cookingStation.GetFuel());
+        cookingStation.SetIsEternal(true);
+        cookingStation.SetFuel(cookingStation.m_maxFuel); // Force to Max Fuel
+      }
+      catch (Exception e)
+      {
+        Log.Error(Main.Instance, e);
+      }
     }
 
     /// <summary>
@@ -395,19 +673,114 @@ namespace Digitalroot.Valheim.EternalFire
     [UsedImplicitly]
     public static void RPC_DisableEternal(this CookingStation cookingStation, long sender)
     {
-      if (cookingStation.m_nview == null
-          || !cookingStation.m_nview.IsValid()
-          || !cookingStation.m_nview.IsOwner()
-          || !cookingStation.IsEternal()
-          || Main.ConfigCheck(cookingStation.name))
+      try
       {
-        return;
+        if (cookingStation.m_nview == null
+            || !cookingStation.m_nview.IsValid()
+            || !cookingStation.m_nview.IsOwner()
+            || !cookingStation.IsEternal()
+            || Main.ConfigCheck(cookingStation.name))
+        {
+          return;
+        }
+
+        Log.Trace(Main.Instance, $"{Main.Namespace}.{MethodBase.GetCurrentMethod()?.DeclaringType?.Name}.{MethodBase.GetCurrentMethod()?.Name}");
+        cookingStation.SetIsEternal(false);
+        cookingStation.SetFuel(cookingStation.GetOriginalFuelLevel() <= 1f ? 0f : cookingStation.GetOriginalFuelLevel()); // Restore removed fuel
+        cookingStation.SetOriginalFuelLevel(0f);                                                                          // Reset 
+      }
+      catch (Exception e)
+      {
+        Log.Error(Main.Instance, e);
+      }
+    }
+
+    /// <summary>
+    /// Set Fuel to Max
+    /// </summary>
+    /// <param name="cookingStation"></param>
+    /// <param name="sender"></param>
+    [UsedImplicitly]
+    public static void RPC_SetFuelLevelMax(this CookingStation cookingStation, long sender)
+    {
+      try
+      {
+        if (cookingStation.m_nview == null
+            || !cookingStation.m_nview.IsValid()
+            || !cookingStation.m_nview.IsOwner()
+            || !cookingStation.IsEternal()
+            || !Main.ConfigCheck(cookingStation.name))
+        {
+          return;
+        }
+
+        Log.Trace(Main.Instance, $"{Main.Namespace}.{MethodBase.GetCurrentMethod()?.DeclaringType?.Name}.{MethodBase.GetCurrentMethod()?.Name}");
+        cookingStation.SetFuel(cookingStation.m_maxFuel);
+      }
+      catch (Exception e)
+      {
+        Log.Error(Main.Instance, e);
+      }
+    }
+
+    [UsedImplicitly]
+    public static float GetOriginalFuelLevel(this CookingStation cookingStation)
+    {
+      try
+      {
+        if (!cookingStation.m_nview.IsValid()) return 0f;
+        return cookingStation.m_nview.GetZDO().GetFloat(Main.CurrentFuelLevelKey);
+      }
+      catch (Exception e)
+      {
+        Log.Error(Main.Instance, e);
       }
 
-      Log.Trace(Main.Instance, $"{Main.Namespace}.{MethodBase.GetCurrentMethod()?.DeclaringType?.Name}.{MethodBase.GetCurrentMethod()?.Name}");
-      cookingStation.m_nview.GetZDO().Set(Main.Guid.GetStableHashCode(), false);
-      cookingStation.SetFuel(cookingStation.m_nview.GetZDO().GetFloat($"{Main.Guid}_currentFuelLevel".GetStableHashCode())); // Restore removed fuel
-      cookingStation.m_nview.GetZDO().Set($"{Main.Guid}_currentFuelLevel".GetStableHashCode(), 0f);                          // Reset 
+      return 0f;
+    }
+
+    [UsedImplicitly]
+    public static void SetOriginalFuelLevel(this CookingStation cookingStation, float value)
+    {
+      try
+      {
+        if (!cookingStation.m_nview.IsValid()) return;
+        cookingStation.m_nview.GetZDO().Set(Main.CurrentFuelLevelKey, value);
+      }
+      catch (Exception e)
+      {
+        Log.Error(Main.Instance, e);
+      }
+    }
+
+    [UsedImplicitly]
+    public static void SetIsEternal(this CookingStation cookingStation, bool value)
+    {
+      try
+      {
+        if (!cookingStation.m_nview.IsValid()) return;
+        cookingStation.m_nview.GetZDO().Set(Main.IsEternalKey, value);
+      }
+      catch (Exception e)
+      {
+        Log.Error(Main.Instance, e);
+      }
+    }
+
+    [UsedImplicitly]
+    public static bool GetIsEternal(this CookingStation cookingStation)
+    {
+      try
+      {
+        if (!cookingStation.m_nview.IsValid()) return false;
+        return cookingStation.m_nview.GetZDO().GetBool(Main.IsEternalKey);
+      }
+      catch (Exception e)
+      {
+        Log.Error(Main.Instance, e);
+      }
+
+      return false;
     }
   }
 
@@ -422,8 +795,17 @@ namespace Digitalroot.Valheim.EternalFire
     [UsedImplicitly]
     public static bool IsEternal(this Smelter smelter)
     {
-      if (!smelter.m_nview.IsValid()) return false;
-      return smelter.m_nview.GetZDO().GetBool(Main.Guid.GetStableHashCode());
+      try
+      {
+        if (smelter.m_nview == null || !smelter.m_nview.IsValid()) return false;
+        return smelter.GetIsEternal();
+      }
+      catch (Exception e)
+      {
+        Log.Error(Main.Instance, e);
+      }
+
+      return false;
     }
 
     /// <summary>
@@ -434,20 +816,27 @@ namespace Digitalroot.Valheim.EternalFire
     [UsedImplicitly]
     public static void RPC_EnableEternal(this Smelter smelter, long sender)
     {
-      if (smelter.m_nview == null
-          || !smelter.m_nview.IsValid()
-          || !smelter.m_nview.IsOwner()
-          || smelter.IsEternal()
-          || !Main.ConfigCheck(smelter.name))
+      try
       {
-        return;
-      }
+        if (smelter.m_nview == null
+            || !smelter.m_nview.IsValid()
+            || !smelter.m_nview.IsOwner()
+            || smelter.IsEternal()
+            || !Main.ConfigCheck(smelter.name))
+        {
+          return;
+        }
 
-      Log.Trace(Main.Instance, $"{Main.Namespace}.{MethodBase.GetCurrentMethod()?.DeclaringType?.Name}.{MethodBase.GetCurrentMethod()?.Name}");
-      // Save the current fuel level so we can restore it on disable.
-      smelter.m_nview.GetZDO().Set($"{Main.Guid}_currentFuelLevel".GetStableHashCode(), smelter.GetFuel());
-      smelter.m_nview.GetZDO().Set(Main.Guid.GetStableHashCode(), true);
-      smelter.SetFuel(0f); // Remove all fuel
+        Log.Trace(Main.Instance, $"{Main.Namespace}.{MethodBase.GetCurrentMethod()?.DeclaringType?.Name}.{MethodBase.GetCurrentMethod()?.Name}");
+        // Save the current fuel level so we can restore it on disable.
+        smelter.SetOriginalFuelLevel(smelter.GetFuel());
+        smelter.SetIsEternal(true);
+        smelter.SetFuel(smelter.m_maxFuel); // Force Max Fuel
+      }
+      catch (Exception e)
+      {
+        Log.Error(Main.Instance, e);
+      }
     }
 
     /// <summary>
@@ -458,19 +847,109 @@ namespace Digitalroot.Valheim.EternalFire
     [UsedImplicitly]
     public static void RPC_DisableEternal(this Smelter smelter, long sender)
     {
-      if (smelter.m_nview == null
-          || !smelter.m_nview.IsValid()
-          || !smelter.m_nview.IsOwner()
-          || !smelter.IsEternal()
-          || Main.ConfigCheck(smelter.name))
+      try
       {
-        return;
+        if (smelter.m_nview == null
+            || !smelter.m_nview.IsValid()
+            || !smelter.m_nview.IsOwner()
+            || !smelter.IsEternal()
+            || Main.ConfigCheck(smelter.name))
+        {
+          return;
+        }
+
+        Log.Trace(Main.Instance, $"{Main.Namespace}.{MethodBase.GetCurrentMethod()?.DeclaringType?.Name}.{MethodBase.GetCurrentMethod()?.Name}");
+        smelter.SetIsEternal(false);
+        smelter.SetFuel(smelter.GetOriginalFuelLevel() <= 1f ? 0f : smelter.GetOriginalFuelLevel());
+        smelter.SetOriginalFuelLevel(0f);
+      }
+      catch (Exception e)
+      {
+        Log.Error(Main.Instance, e);
+      }
+    }
+
+    [UsedImplicitly]
+    public static void RPC_SetFuelLevelMax(this Smelter smelter, long sender)
+    {
+      try
+      {
+        if (smelter.m_nview == null
+            || !smelter.m_nview.IsValid()
+            || !smelter.m_nview.IsOwner()
+            || !smelter.IsEternal()
+            || !Main.ConfigCheck(smelter.name))
+        {
+          return;
+        }
+
+        Log.Trace(Main.Instance, $"{Main.Namespace}.{MethodBase.GetCurrentMethod()?.DeclaringType?.Name}.{MethodBase.GetCurrentMethod()?.Name}");
+        smelter.SetFuel(smelter.m_maxFuel);
+      }
+      catch (Exception e)
+      {
+        Log.Error(Main.Instance, e);
+      }
+    }
+
+    [UsedImplicitly]
+    public static float GetOriginalFuelLevel(this Smelter smelter)
+    {
+      try
+      {
+        if (!smelter.m_nview.IsValid()) return 0f;
+        return smelter.m_nview.GetZDO().GetFloat(Main.CurrentFuelLevelKey);
+      }
+      catch (Exception e)
+      {
+        Log.Error(Main.Instance, e);
       }
 
-      Log.Trace(Main.Instance, $"{Main.Namespace}.{MethodBase.GetCurrentMethod()?.DeclaringType?.Name}.{MethodBase.GetCurrentMethod()?.Name}");
-      smelter.m_nview.GetZDO().Set(Main.Guid.GetStableHashCode(), false);
-      smelter.SetFuel(smelter.m_nview.GetZDO().GetFloat($"{Main.Guid}_currentFuelLevel".GetStableHashCode())); // Restore removed fuel
-      smelter.m_nview.GetZDO().Set($"{Main.Guid}_currentFuelLevel".GetStableHashCode(), 0f);                   // Reset 
+      return 0f;
+    }
+
+    [UsedImplicitly]
+    public static void SetOriginalFuelLevel(this Smelter smelter, float value)
+    {
+      try
+      {
+        if (!smelter.m_nview.IsValid()) return;
+        smelter.m_nview.GetZDO().Set(Main.CurrentFuelLevelKey, value);
+      }
+      catch (Exception e)
+      {
+        Log.Error(Main.Instance, e);
+      }
+    }
+
+    [UsedImplicitly]
+    public static void SetIsEternal(this Smelter smelter, bool value)
+    {
+      try
+      {
+        if (!smelter.m_nview.IsValid()) return;
+        smelter.m_nview.GetZDO().Set(Main.IsEternalKey, value);
+      }
+      catch (Exception e)
+      {
+        Log.Error(Main.Instance, e);
+      }
+    }
+
+    [UsedImplicitly]
+    public static bool GetIsEternal(this Smelter smelter)
+    {
+      try
+      {
+        if (!smelter.m_nview.IsValid()) return false;
+        return smelter.m_nview.GetZDO().GetBool(Main.IsEternalKey);
+      }
+      catch (Exception e)
+      {
+        Log.Error(Main.Instance, e);
+      }
+
+      return false;
     }
   }
 }

@@ -5,7 +5,7 @@ using HarmonyLib;
 using JetBrains.Annotations;
 using Jotunn.Utils;
 using System;
-using System.Diagnostics;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
@@ -20,6 +20,9 @@ namespace Digitalroot.Valheim.EternalFire
   {
     private Harmony _harmony;
     public static Main Instance;
+    public static readonly int CurrentFuelLevelKey = $"{Guid}_currentFuelLevel".GetStableHashCode();
+    public static readonly int IsEternalKey = $"{Guid}_isEternal".GetStableHashCode();
+    public static bool IsVpcInstalled => DMF.Utils.Utils.ValheimUtils.DoesPluginExist("MidnightsFX.ValheimCommunityPatch");
 
     [UsedImplicitly]
     public static ConfigEntry<int> NexusId { get; private set; }
@@ -49,6 +52,7 @@ namespace Digitalroot.Valheim.EternalFire
     private static ConfigEntry<bool> _configEitrRefinery;
     private static ConfigEntry<bool> _configPieceBathtub;
     private static ConfigEntry<string> _configCustomInstance;
+    public static ConfigEntry<bool> DisplayDebugInfo;
 
     public Main()
     {
@@ -101,6 +105,8 @@ namespace Digitalroot.Valheim.EternalFire
 
         #endregion
 
+        DisplayDebugInfo = Config.Bind(PluginConfigSection.Advanced, nameof(DisplayDebugInfo), false, new ConfigDescription($"Enable to display debug info on mouseover", null, new ConfigurationManagerAttributes { Browsable = true, ReadOnly = false, IsAdvanced = true }));
+
         _harmony = Harmony.CreateAndPatchAll(typeof(Main).Assembly, Guid);
       }
       catch (Exception e)
@@ -123,7 +129,7 @@ namespace Digitalroot.Valheim.EternalFire
       }
     }
 
-    private static Stopwatch _unknownPreFabLogMessageTimeout = new();
+    private static readonly HashSet<string> UnknownPreFabs = new();
 
     public static bool ConfigCheck(string instanceName)
     {
@@ -228,25 +234,9 @@ namespace Digitalroot.Valheim.EternalFire
           {
             EternalFuel = true;
           }
-          else
+          else if (!UnknownPreFabs.Contains(instanceName))
           {
-            if (_unknownPreFabLogMessageTimeout == null) break;
-
-            if (!_unknownPreFabLogMessageTimeout.IsRunning)
-            {
-              DMF.Logging.Log.Trace(Instance, $"{Namespace}.{MethodBase.GetCurrentMethod()?.DeclaringType?.Name}.{MethodBase.GetCurrentMethod()?.Name} Timer Start");
-              _unknownPreFabLogMessageTimeout.Start();
-            }
-
-            // Unknown
-            DMF.Logging.Log.Trace(Instance, $"{Namespace}.{MethodBase.GetCurrentMethod()?.DeclaringType?.Name}.{MethodBase.GetCurrentMethod()?.Name}[{_unknownPreFabLogMessageTimeout.Elapsed.Minutes}:{_unknownPreFabLogMessageTimeout.Elapsed.Seconds}][{instanceName}] Unknown");
-
-            if (_unknownPreFabLogMessageTimeout.Elapsed.Minutes >= 1)
-            {
-              DMF.Logging.Log.Trace(Instance, $"{Namespace}.{MethodBase.GetCurrentMethod()?.DeclaringType?.Name}.{MethodBase.GetCurrentMethod()?.Name} Timer End");
-              _unknownPreFabLogMessageTimeout.Stop();
-              _unknownPreFabLogMessageTimeout = null;
-            }
+            AddUnknownFireSource(instanceName); // Unknown
           }
 
           break;
@@ -255,6 +245,13 @@ namespace Digitalroot.Valheim.EternalFire
       // DMF.Logging.Log.Trace(Instance, $"{Namespace}.{MethodBase.GetCurrentMethod()?.DeclaringType?.Name}.{MethodBase.GetCurrentMethod()?.Name}[{instanceName}] {EternalFuel}");
 
       return EternalFuel;
+    }
+
+    private static void AddUnknownFireSource(string instanceName)
+    {
+      UnknownPreFabs.Add(instanceName);
+
+      DMF.Logging.Log.Trace(Instance, $"{Namespace}.{MethodBase.GetCurrentMethod()?.DeclaringType?.Name}.{MethodBase.GetCurrentMethod()?.Name}[{instanceName}] Unknown");
     }
 
     #region Implementation of ITraceableLogging
