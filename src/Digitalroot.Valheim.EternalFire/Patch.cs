@@ -465,6 +465,131 @@ namespace Digitalroot.Valheim.EternalFire
     }
 
     #endregion
+
+
+    #region ShieldGenerator
+
+    [HarmonyPatch(typeof(ShieldGenerator))]
+    public class PatchShieldGenerator
+    {
+      [HarmonyPostfix, HarmonyPatch(typeof(ShieldGenerator), nameof(ShieldGenerator.Start))]
+      private static void PostfixStart(ShieldGenerator __instance, ZNetView ___m_nview)
+      {
+        try
+        {
+          Log.Trace(Main.Instance, $"{Main.Namespace}.{MethodBase.GetCurrentMethod()?.DeclaringType?.Name}.{MethodBase.GetCurrentMethod()?.Name}");
+          if (___m_nview == null || !___m_nview.IsValid()) return;
+          ___m_nview.Register(nameof(SmelterExtensions.RPC_EnableEternal), __instance.RPC_EnableEternal);
+          ___m_nview.Register(nameof(SmelterExtensions.RPC_DisableEternal), __instance.RPC_DisableEternal);
+          ___m_nview.Register(nameof(SmelterExtensions.RPC_SetFuelLevelMax), __instance.RPC_SetFuelLevelMax);
+          __instance.SetIsEternal(__instance.IsEternal());
+        }
+        catch (Exception e)
+        {
+          Log.Error(Main.Instance, e);
+        }
+      }
+
+      [HarmonyPrefix, HarmonyPatch(typeof(ShieldGenerator), nameof(ShieldGenerator.UpdateShield))]
+      private static void PrefixUpdateShield(ShieldGenerator __instance, ZNetView ___m_nview)
+      {
+        try
+        {
+          if (___m_nview == null || !___m_nview.IsValid() || __instance.m_fuelItems?.Count < 1) return;
+
+          if (!___m_nview.HasOwner())
+          {
+            ___m_nview.ClaimOwnership();
+          }
+
+          if (Main.ConfigCheck(__instance.name)) // Is the ShieldGenerator enabled in the mod's config.
+          {
+            // ShieldGenerator is not tagged Eternal.
+            if (!__instance.IsEternal())
+            {
+              // Tell the owner to tag the ShieldGenerator as Eternal
+              ___m_nview.InvokeRPC(nameof(ShieldGeneratorExtensions.RPC_EnableEternal));
+            }
+          }
+          else // The ShieldGenerator is disabled in the mod's config.
+          {
+            // ShieldGenerator is tagged Eternal.
+            if (__instance.IsEternal())
+            {
+              // Tell the owner to untag the ShieldGenerator as Eternal
+              ___m_nview.InvokeRPC(nameof(ShieldGeneratorExtensions.RPC_DisableEternal));
+            }
+          }
+
+          if (__instance.IsEternal() && __instance.GetFuel() <= __instance.m_maxFuel - 1)
+          {
+            Log.Trace(Main.Instance, $"{Main.Namespace}.{MethodBase.GetCurrentMethod()?.DeclaringType?.Name}.{MethodBase.GetCurrentMethod()?.Name} [Adding Fuel for {__instance.name}]");
+
+            // Tell the owner to add fuel to the ShieldGenerator
+            __instance.SetFuel(__instance.m_maxFuel); // This calls RPC_SetFuel
+          }
+        }
+        catch (Exception e)
+        {
+          Log.Error(Main.Instance, e);
+        }
+      }
+
+      [HarmonyPostfix, HarmonyPatch(typeof(ShieldGenerator), nameof(ShieldGenerator.OnHoverAddFuel))]
+      private static void PostfixOnHoverAddFuel(ShieldGenerator __instance, ZNetView ___m_nview, ref string __result)
+      {
+        try
+        {
+          if (___m_nview == null || !___m_nview.IsValid()) return;
+
+          if (__instance.IsEternal())
+          {
+            __result = $"{__instance.m_name}\n<color={Main.TextColor.Value}><b>$mod_eternal_fire_hover_text</b></color>";
+            if (Main.DisplayDebugInfo.Value)
+            {
+              // ReSharper disable once StringLiteralTypo
+              __result += $"\n( $piece_shieldgenerator_add {Mathf.Ceil(__instance.GetFuel())}/{__instance.m_maxFuel} )";
+            }
+
+            __result = Localization.instance.Localize(__result);
+          }
+
+          if (Main.DisplayDebugInfo.Value)
+          {
+            __result += $"\nIsEternalZdo: {__instance.GetIsEternal()}";
+            __result += $"\nOriginalFuelLevelZdo: {__instance.GetOriginalFuelLevel()}";
+            __result += $"\nIsVPCInstalled: {Main.IsVpcInstalled}";
+            __result += $"\nm_enableAttack: {__instance.m_enableAttack}";
+          }
+        }
+        catch (Exception e)
+        {
+          Log.Error(Main.Instance, e);
+        }
+      }
+
+      [HarmonyPrefix, HarmonyPatch(typeof(ShieldGenerator), nameof(ShieldGenerator.OnAddFuel))]
+      private static bool PrefixOnAddFuel(ShieldGenerator __instance, ZNetView ___m_nview, ref bool __result)
+      {
+        try
+        {
+          if (___m_nview == null || !___m_nview.IsValid()) return true;
+          if (__instance.IsEternal())
+          {
+            __result = false;
+            return false;
+          }
+        }
+        catch (Exception e)
+        {
+          Log.Error(Main.Instance, e);
+        }
+
+        return true;
+      }
+    }
+
+    #endregion
   }
 
   [UsedImplicitly]
@@ -943,6 +1068,175 @@ namespace Digitalroot.Valheim.EternalFire
       {
         if (!smelter.m_nview.IsValid()) return false;
         return smelter.m_nview.GetZDO().GetBool(Main.IsEternalKey);
+      }
+      catch (Exception e)
+      {
+        Log.Error(Main.Instance, e);
+      }
+
+      return false;
+    }
+  }
+
+  [UsedImplicitly]
+  public static class ShieldGeneratorExtensions
+  {
+    /// <summary>
+    /// Is the current ShieldGenerator Eternal?
+    /// </summary>
+    /// <param name="shieldGenerator"></param>
+    /// <returns>True if the current Smelter is Eternal</returns>
+    [UsedImplicitly]
+    public static bool IsEternal(this ShieldGenerator shieldGenerator)
+    {
+      try
+      {
+        if (shieldGenerator.m_nview == null || !shieldGenerator.m_nview.IsValid()) return false;
+        return shieldGenerator.GetIsEternal();
+      }
+      catch (Exception e)
+      {
+        Log.Error(Main.Instance, e);
+      }
+
+      return false;
+    }
+
+    /// <summary>
+    /// Enable Eternal for ShieldGenerator
+    /// </summary>
+    /// <param name="shieldGenerator"></param>
+    /// <param name="sender"></param>
+    [UsedImplicitly]
+    public static void RPC_EnableEternal(this ShieldGenerator shieldGenerator, long sender)
+    {
+      try
+      {
+        if (shieldGenerator.m_nview == null
+            || !shieldGenerator.m_nview.IsValid()
+            || !shieldGenerator.m_nview.IsOwner()
+            || shieldGenerator.IsEternal()
+            || !Main.ConfigCheck(shieldGenerator.name))
+        {
+          return;
+        }
+
+        Log.Trace(Main.Instance, $"{Main.Namespace}.{MethodBase.GetCurrentMethod()?.DeclaringType?.Name}.{MethodBase.GetCurrentMethod()?.Name}");
+        // Save the current fuel level so we can restore it on disable.
+        shieldGenerator.SetOriginalFuelLevel(shieldGenerator.GetFuel());
+        shieldGenerator.SetIsEternal(true);
+        shieldGenerator.SetFuel(shieldGenerator.m_maxFuel); // Force Max Fuel
+      }
+      catch (Exception e)
+      {
+        Log.Error(Main.Instance, e);
+      }
+    }
+
+    /// <summary>
+    /// Disable Eternal for ShieldGenerator
+    /// </summary>
+    /// <param name="shieldGenerator"></param>
+    /// <param name="sender"></param>
+    [UsedImplicitly]
+    public static void RPC_DisableEternal(this ShieldGenerator shieldGenerator, long sender)
+    {
+      try
+      {
+        if (shieldGenerator.m_nview == null
+            || !shieldGenerator.m_nview.IsValid()
+            || !shieldGenerator.m_nview.IsOwner()
+            || !shieldGenerator.IsEternal()
+            || Main.ConfigCheck(shieldGenerator.name))
+        {
+          return;
+        }
+
+        Log.Trace(Main.Instance, $"{Main.Namespace}.{MethodBase.GetCurrentMethod()?.DeclaringType?.Name}.{MethodBase.GetCurrentMethod()?.Name}");
+        shieldGenerator.SetIsEternal(false);
+        shieldGenerator.SetFuel(shieldGenerator.GetOriginalFuelLevel() <= 1f ? 0f : shieldGenerator.GetOriginalFuelLevel());
+        shieldGenerator.SetOriginalFuelLevel(0f);
+      }
+      catch (Exception e)
+      {
+        Log.Error(Main.Instance, e);
+      }
+    }
+
+    [UsedImplicitly]
+    public static void RPC_SetFuelLevelMax(this ShieldGenerator shieldGenerator, long sender)
+    {
+      try
+      {
+        if (shieldGenerator.m_nview == null
+            || !shieldGenerator.m_nview.IsValid()
+            || !shieldGenerator.m_nview.IsOwner()
+            || !shieldGenerator.IsEternal()
+            || !Main.ConfigCheck(shieldGenerator.name))
+        {
+          return;
+        }
+
+        Log.Trace(Main.Instance, $"{Main.Namespace}.{MethodBase.GetCurrentMethod()?.DeclaringType?.Name}.{MethodBase.GetCurrentMethod()?.Name}");
+        shieldGenerator.SetFuel(shieldGenerator.m_maxFuel);
+      }
+      catch (Exception e)
+      {
+        Log.Error(Main.Instance, e);
+      }
+    }
+
+    [UsedImplicitly]
+    public static float GetOriginalFuelLevel(this ShieldGenerator shieldGenerator)
+    {
+      try
+      {
+        if (!shieldGenerator.m_nview.IsValid()) return 0f;
+        return shieldGenerator.m_nview.GetZDO().GetFloat(Main.CurrentFuelLevelKey);
+      }
+      catch (Exception e)
+      {
+        Log.Error(Main.Instance, e);
+      }
+
+      return 0f;
+    }
+
+    [UsedImplicitly]
+    public static void SetOriginalFuelLevel(this ShieldGenerator shieldGenerator, float value)
+    {
+      try
+      {
+        if (!shieldGenerator.m_nview.IsValid()) return;
+        shieldGenerator.m_nview.GetZDO().Set(Main.CurrentFuelLevelKey, value);
+      }
+      catch (Exception e)
+      {
+        Log.Error(Main.Instance, e);
+      }
+    }
+
+    [UsedImplicitly]
+    public static void SetIsEternal(this ShieldGenerator shieldGenerator, bool value)
+    {
+      try
+      {
+        if (!shieldGenerator.m_nview.IsValid()) return;
+        shieldGenerator.m_nview.GetZDO().Set(Main.IsEternalKey, value);
+      }
+      catch (Exception e)
+      {
+        Log.Error(Main.Instance, e);
+      }
+    }
+
+    [UsedImplicitly]
+    public static bool GetIsEternal(this ShieldGenerator shieldGenerator)
+    {
+      try
+      {
+        if (!shieldGenerator.m_nview.IsValid()) return false;
+        return shieldGenerator.m_nview.GetZDO().GetBool(Main.IsEternalKey);
       }
       catch (Exception e)
       {

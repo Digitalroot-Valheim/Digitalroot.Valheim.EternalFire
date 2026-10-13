@@ -1,3 +1,6 @@
+## v1.1.8
+- Added support for the `ShieldGenerator`
+
 ## v1.1.7
 - Improved [Valheim Community Patch](https://thunderstore.io/c/valheim/p/MidnightMods/ValheimCommunityPatch/) compatibility.
 - Refactored how unknown Fire Sources are tracked and logged, reducing Trace spam.

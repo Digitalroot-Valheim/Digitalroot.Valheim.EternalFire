@@ -51,6 +51,7 @@ namespace Digitalroot.Valheim.EternalFire
     private static ConfigEntry<bool> _configBlastFurnace;
     private static ConfigEntry<bool> _configEitrRefinery;
     private static ConfigEntry<bool> _configPieceBathtub;
+    private static ConfigEntry<bool> _configPieceShieldGenerator;
     private static ConfigEntry<string> _configCustomInstance;
     public static ConfigEntry<bool> DisplayDebugInfo;
 
@@ -94,6 +95,7 @@ namespace Digitalroot.Valheim.EternalFire
         _configSmelter = Config.Bind(PluginConfigSection.Smelters, nameof(DMF.Names.Vanilla.PrefabNames.Smelter), false, new ConfigDescription($"Enable {nameof(DMF.Names.Vanilla.PrefabNames.Smelter)}", null, new ConfigurationManagerAttributes { Browsable = true, ReadOnly = false, isAdminOnly = true }));
         _configBlastFurnace = Config.Bind(PluginConfigSection.Smelters, "BlastFurnace", false, new ConfigDescription("Enable Blast Furnace", null, new ConfigurationManagerAttributes { Browsable = true, ReadOnly = false, isAdminOnly = true }));
         _configEitrRefinery = Config.Bind(PluginConfigSection.Smelters, "EitrRefinery", false, new ConfigDescription("Enable Eitr Refinery", null, new ConfigurationManagerAttributes { Browsable = true, ReadOnly = false, isAdminOnly = true }));
+        _configPieceShieldGenerator = Config.Bind(PluginConfigSection.ShieldGenerators, "ShieldGenerator", false, new ConfigDescription("Enable Shield Generator", null, new ConfigurationManagerAttributes { Browsable = true, ReadOnly = false, isAdminOnly = true }));
         _configCustomInstance = Config.Bind(PluginConfigSection.Custom, "CustomPrefabs", "", new ConfigDescription("A comma-separated list of prefab names", null, new ConfigurationManagerAttributes { Browsable = true, ReadOnly = false, isAdminOnly = true }));
 
         #region com.rockerkitten.boneappetit configs
@@ -215,6 +217,10 @@ namespace Digitalroot.Valheim.EternalFire
 
         case DMF.Names.Vanilla.PrefabNames.PieceSnowlantern:
           EternalFuel = _configSnowLantern.Value;
+          break;
+
+        case DMF.Names.Vanilla.PrefabNames.PieceShieldgenerator:
+          EternalFuel = _configPieceShieldGenerator.Value;
           break;
 
         case PluginConfigSection.SmokelessHearth:

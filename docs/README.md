@@ -43,6 +43,7 @@ Keeps fires lit and burning without needing to fuel them.
 | EitrRefinery                    | Smelters          | bool      | Enable Eitr Refinery                      |
 | HotTub                          | Smelters          | bool      | Enable Hot Tub                            |
 | Smelter                         | Smelters          | bool      | Enable Smelter                            |
+| ShieldGenerator                 | ShieldGenerators  | bool      | Enable Shield Generator                   |
 | CustomPrefabs                   | Custom            | string    | A comma-separated list of prefab names    |
 | SmokeLessFirePit                | BoneAppetit       | bool      | Enable SmokeLessFirePit                   |
 | SmokelessHearth                 | BoneAppetit       | bool      | Enable SmokelessHearth                    |

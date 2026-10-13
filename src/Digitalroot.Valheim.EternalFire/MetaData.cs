@@ -17,6 +17,7 @@ namespace Digitalroot.Valheim.EternalFire
       internal static readonly string Fireplaces = nameof(Fireplaces);
       internal static readonly string CookingStations = nameof(CookingStations);
       internal static readonly string Smelters = nameof(Smelters);
+      internal static readonly string ShieldGenerators = nameof(ShieldGenerators);
       internal static readonly string Custom = nameof(Custom);
       internal static readonly string BoneAppetit = nameof(BoneAppetit);
       internal const string SmokelessHearth = "rk_hearth";
