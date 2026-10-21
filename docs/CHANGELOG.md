@@ -1,3 +1,6 @@
+## v1.1.10
+- Removed VPC SoftDependency
+
 ## v1.1.9
 - Fixed multiplayer bugs. 
 - `Eternal` hovertext should display for all players with **EternalFire** installed.
