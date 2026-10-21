@@ -25,13 +25,12 @@ namespace Digitalroot.Valheim.EternalFire
       {
         try
         {
-          Log.Trace(Main.Instance, $"{Main.Namespace}.{MethodBase.GetCurrentMethod()?.DeclaringType?.Name}.{MethodBase.GetCurrentMethod()?.Name}");
+          if (Main.Instance.EnableTrace) Log.Trace(Main.Instance, $"{Main.Namespace}.{MethodBase.GetCurrentMethod()?.DeclaringType?.Name}.{MethodBase.GetCurrentMethod()?.Name}");
           if (___m_nview == null || !___m_nview.IsValid()) return;
-
-          ___m_nview.Register(nameof(FireplaceExtensions.RPC_EnableEternal), __instance.RPC_EnableEternal);
-          ___m_nview.Register(nameof(FireplaceExtensions.RPC_DisableEternal), __instance.RPC_DisableEternal);
-
-          __instance.SetIsEternal(__instance.IsEternal());
+          ___m_nview.Register($"{Main.Guid}_{nameof(FireplaceExtensions.RPC_EnableEternal)}", __instance.RPC_EnableEternal);
+          ___m_nview.Register($"{Main.Guid}_{nameof(FireplaceExtensions.RPC_DisableEternal)}", __instance.RPC_DisableEternal);
+          if (Main.Instance.EnableTrace) Log.Trace(Main.Instance, $"{Main.Namespace}.{MethodBase.GetCurrentMethod()?.DeclaringType?.Name}.{MethodBase.GetCurrentMethod()?.Name} [Init.IsEternal: {__instance.IsEternal()}]");
+          // __instance.SetIsEternal(__instance.IsEternal());
         }
         catch (Exception e)
         {
@@ -51,28 +50,33 @@ namespace Digitalroot.Valheim.EternalFire
             ___m_nview.ClaimOwnership();
           }
 
+          var eternal = __instance.GetIsEternal();
+          __instance.m_infiniteFuel = eternal;
+
           if (Main.ConfigCheck(__instance.name)) // Is the Fireplace enabled in the mod's config.
           {
-            // Fireplace is not tagged Eternal or m_infiniteFuel is not enabled. 
-            if (!__instance.IsEternal() || !__instance.m_infiniteFuel)
+            // Fireplace is not tagged Eternal
+            if (!eternal)
             {
-              // Tell the owner to tag Fireplace as Eternal and enable m_infiniteFuel.
-              ___m_nview.InvokeRPC(nameof(FireplaceExtensions.RPC_EnableEternal));
+              if (Main.Instance.EnableTrace) Log.Trace(Main.Instance, $"{Main.Namespace}.{MethodBase.GetCurrentMethod()?.DeclaringType?.Name}.{MethodBase.GetCurrentMethod()?.Name} [InvokeRPC.RPC_EnableEternal]");
+              // Tell the owner to tag Fireplace as Eternal
+              ___m_nview.InvokeRPC($"{Main.Guid}_{nameof(FireplaceExtensions.RPC_EnableEternal)}");
             }
           }
           else // The Fireplace is disabled in the mod's config.
           {
-            // Fireplace is tagged Eternal or m_infiniteFuel is enabled. 
-            if (__instance.IsEternal() || __instance.m_infiniteFuel)
+            // Fireplace is tagged Eternal 
+            if (eternal)
             {
-              // Tell the owner to untag Fireplace as Eternal and disable m_infiniteFuel.
-              ___m_nview.InvokeRPC(nameof(FireplaceExtensions.RPC_DisableEternal));
+              if (Main.Instance.EnableTrace) Log.Trace(Main.Instance, $"{Main.Namespace}.{MethodBase.GetCurrentMethod()?.DeclaringType?.Name}.{MethodBase.GetCurrentMethod()?.Name} [InvokeRPC.RPC_DisableEternal]");
+              // Tell the owner to untag Fireplace as Eternal
+              ___m_nview.InvokeRPC($"{Main.Guid}_{nameof(FireplaceExtensions.RPC_DisableEternal)}");
             }
           }
 
-          if (__instance.IsEternal() && __instance.GetFuel() + 1 < __instance.m_maxFuel)
+          if (__instance.IsEternal() && __instance.GetFuel() <= __instance.m_maxFuel - 1f)
           {
-            Log.Trace(Main.Instance, $"{Main.Namespace}.{MethodBase.GetCurrentMethod()?.DeclaringType?.Name}.{MethodBase.GetCurrentMethod()?.Name} [Adding Fuel to {__instance.name}]");
+            if (Main.Instance.EnableTrace) Log.Trace(Main.Instance, $"{Main.Namespace}.{MethodBase.GetCurrentMethod()?.DeclaringType?.Name}.{MethodBase.GetCurrentMethod()?.Name} [Adding Fuel to {__instance.name}]");
             // Tell the owner to add fuel to the Fireplace
             ___m_nview.InvokeRPC(nameof(Fireplace.RPC_AddFuelAmount), __instance.m_maxFuel - __instance.GetFuel());
             #if DEBUG
@@ -142,12 +146,12 @@ namespace Digitalroot.Valheim.EternalFire
       {
         try
         {
-          Log.Trace(Main.Instance, $"{Main.Namespace}.{MethodBase.GetCurrentMethod()?.DeclaringType?.Name}.{MethodBase.GetCurrentMethod()?.Name}");
+          if (Main.Instance.EnableTrace) Log.Trace(Main.Instance, $"{Main.Namespace}.{MethodBase.GetCurrentMethod()?.DeclaringType?.Name}.{MethodBase.GetCurrentMethod()?.Name}");
           if (___m_nview == null || !___m_nview.IsValid()) return;
-          ___m_nview.Register(nameof(CookingStationExtensions.RPC_EnableEternal), __instance.RPC_EnableEternal);
-          ___m_nview.Register(nameof(CookingStationExtensions.RPC_DisableEternal), __instance.RPC_DisableEternal);
-          ___m_nview.Register(nameof(CookingStationExtensions.RPC_SetFuelLevelMax), __instance.RPC_SetFuelLevelMax);
-          __instance.SetIsEternal(__instance.IsEternal());
+          ___m_nview.Register($"{Main.Guid}_{nameof(CookingStationExtensions.RPC_EnableEternal)}", __instance.RPC_EnableEternal);
+          ___m_nview.Register($"{Main.Guid}_{nameof(CookingStationExtensions.RPC_DisableEternal)}", __instance.RPC_DisableEternal);
+          ___m_nview.Register($"{Main.Guid}_{nameof(CookingStationExtensions.RPC_SetFuelLevelMax)}", __instance.RPC_SetFuelLevelMax);
+          // __instance.SetIsEternal(__instance.IsEternal());
         }
         catch (Exception e)
         {
@@ -174,7 +178,7 @@ namespace Digitalroot.Valheim.EternalFire
             if (!__instance.IsEternal())
             {
               // Tell the owner to tag the CookingStation as Eternal
-              ___m_nview.InvokeRPC(nameof(CookingStationExtensions.RPC_EnableEternal));
+              ___m_nview.InvokeRPC($"{Main.Guid}_{nameof(CookingStationExtensions.RPC_EnableEternal)}");
             }
           }
           else // The CookingStation is disabled in the mod's config.
@@ -183,18 +187,19 @@ namespace Digitalroot.Valheim.EternalFire
             if (__instance.IsEternal())
             {
               // Tell the owner to untag the CookingStation as Eternal
-              ___m_nview.InvokeRPC(nameof(CookingStationExtensions.RPC_DisableEternal));
+              ___m_nview.InvokeRPC($"{Main.Guid}_{nameof(CookingStationExtensions.RPC_DisableEternal)}");
             }
           }
 
-          if (__instance.IsEternal() && __instance.GetFuel() + 1 < __instance.m_maxFuel)
+          if (__instance.IsEternal() && __instance.GetFuel() <= __instance.m_maxFuel - 1f)
           {
-            Log.Trace(Main.Instance, $"{Main.Namespace}.{MethodBase.GetCurrentMethod()?.DeclaringType?.Name}.{MethodBase.GetCurrentMethod()?.Name} [RPC_SetFuelLevelMax for {__instance.name}]");
+            if (Main.Instance.EnableTrace) Log.Trace(Main.Instance, $"{Main.Namespace}.{MethodBase.GetCurrentMethod()?.DeclaringType?.Name}.{MethodBase.GetCurrentMethod()?.Name} [RPC_SetFuelLevelMax for {__instance.name}]");
 
             // Tell the owner to add fuel to the CookingStation
+            // ReSharper disable once ConvertIfStatementToConditionalTernaryExpression
             if (Main.IsVpcInstalled)
             {
-              ___m_nview.InvokeRPC(nameof(CookingStationExtensions.RPC_SetFuelLevelMax));
+              ___m_nview.InvokeRPC($"{Main.Guid}_{nameof(CookingStationExtensions.RPC_SetFuelLevelMax)}");
             }
             else
             {
@@ -241,7 +246,7 @@ namespace Digitalroot.Valheim.EternalFire
       }
 
       [HarmonyPrefix, HarmonyPatch(typeof(CookingStation), nameof(CookingStation.OnAddFuelSwitch))]
-      private static bool PostfixOnAddFuelSwitch(CookingStation __instance, ZNetView ___m_nview, ref bool __result)
+      private static bool PrefixOnAddFuelSwitch(CookingStation __instance, ZNetView ___m_nview, ref bool __result)
       {
         try
         {
@@ -269,8 +274,8 @@ namespace Digitalroot.Valheim.EternalFire
       {
         try
         {
-          Log.Trace(Main.Instance, $"{Main.Namespace}.{MethodBase.GetCurrentMethod()?.DeclaringType?.Name}.{MethodBase.GetCurrentMethod()?.Name}");
-          return AccessTools.Method(typeof(CookingStation), "<DropAllItems>g__drop|1_0");
+          if (Main.Instance.EnableTrace) Log.Trace(Main.Instance, $"{Main.Namespace}.{MethodBase.GetCurrentMethod()?.DeclaringType?.Name}.{MethodBase.GetCurrentMethod()?.Name}");
+          return AccessTools.Method(typeof(CookingStation), "<DropAllItems>g__drop|1_0"); // fragile, validate after any update to base game.
         }
         catch (Exception e)
         {
@@ -285,7 +290,7 @@ namespace Digitalroot.Valheim.EternalFire
       {
         try
         {
-          Log.Trace(Main.Instance, $"{Main.Namespace}.{MethodBase.GetCurrentMethod()?.DeclaringType?.Name}.{MethodBase.GetCurrentMethod()?.Name}");
+          if (Main.Instance.EnableTrace) Log.Trace(Main.Instance, $"{Main.Namespace}.{MethodBase.GetCurrentMethod()?.DeclaringType?.Name}.{MethodBase.GetCurrentMethod()?.Name}");
           if (___m_nview == null || !___m_nview.IsValid()) return true; // If not valid, then skip this patch but continue method chain.
 
           if (__instance.IsEternal())
@@ -328,12 +333,12 @@ namespace Digitalroot.Valheim.EternalFire
       {
         try
         {
-          Log.Trace(Main.Instance, $"{Main.Namespace}.{MethodBase.GetCurrentMethod()?.DeclaringType?.Name}.{MethodBase.GetCurrentMethod()?.Name}");
+          if (Main.Instance.EnableTrace) Log.Trace(Main.Instance, $"{Main.Namespace}.{MethodBase.GetCurrentMethod()?.DeclaringType?.Name}.{MethodBase.GetCurrentMethod()?.Name}");
           if (___m_nview == null || !___m_nview.IsValid()) return;
-          ___m_nview.Register(nameof(SmelterExtensions.RPC_EnableEternal), __instance.RPC_EnableEternal);
-          ___m_nview.Register(nameof(SmelterExtensions.RPC_DisableEternal), __instance.RPC_DisableEternal);
-          ___m_nview.Register(nameof(SmelterExtensions.RPC_SetFuelLevelMax), __instance.RPC_SetFuelLevelMax);
-          __instance.SetIsEternal(__instance.IsEternal());
+          ___m_nview.Register($"{Main.Guid}_{nameof(SmelterExtensions.RPC_EnableEternal)}", __instance.RPC_EnableEternal);
+          ___m_nview.Register($"{Main.Guid}_{nameof(SmelterExtensions.RPC_DisableEternal)}", __instance.RPC_DisableEternal);
+          ___m_nview.Register($"{Main.Guid}_{nameof(SmelterExtensions.RPC_SetFuelLevelMax)}", __instance.RPC_SetFuelLevelMax);
+          // __instance.SetIsEternal(__instance.IsEternal());
         }
         catch (Exception e)
         {
@@ -359,7 +364,7 @@ namespace Digitalroot.Valheim.EternalFire
             if (!__instance.IsEternal())
             {
               // Tell the owner to tag the Smelter as Eternal
-              ___m_nview.InvokeRPC(nameof(SmelterExtensions.RPC_EnableEternal));
+              ___m_nview.InvokeRPC($"{Main.Guid}_{nameof(SmelterExtensions.RPC_EnableEternal)}");
             }
           }
           else // The Smelter is disabled in the mod's config.
@@ -368,21 +373,27 @@ namespace Digitalroot.Valheim.EternalFire
             if (__instance.IsEternal())
             {
               // Tell the owner to untag the Smelter as Eternal
-              ___m_nview.InvokeRPC(nameof(SmelterExtensions.RPC_DisableEternal));
+              ___m_nview.InvokeRPC($"{Main.Guid}_{nameof(SmelterExtensions.RPC_DisableEternal)}");
             }
           }
 
-          if (__instance.IsEternal() && __instance.GetFuel() + 1 < __instance.m_maxFuel)
+          if (__instance.IsEternal() && __instance.GetFuel() <= __instance.m_maxFuel - 1f)
           {
-            Log.Trace(Main.Instance, $"{Main.Namespace}.{MethodBase.GetCurrentMethod()?.DeclaringType?.Name}.{MethodBase.GetCurrentMethod()?.Name} [RPC_SetFuelLevelMax for {__instance.name}]");
+            if (Main.Instance.EnableTrace)
+            {
+              Log.Trace(Main.Instance, $"{Main.Namespace}.{MethodBase.GetCurrentMethod()?.DeclaringType?.Name}.{MethodBase.GetCurrentMethod()?.Name} [Adding Fuel for {__instance.name}]");
+              Log.Trace(Main.Instance, $"{Main.Namespace}.{MethodBase.GetCurrentMethod()?.DeclaringType?.Name}.{MethodBase.GetCurrentMethod()?.Name} [__instance.GetFuel() : {__instance.GetFuel()}]");
+            }
 
             // Tell the owner to add fuel to the Smelter
             if (Main.IsVpcInstalled)
             {
-              ___m_nview.InvokeRPC(nameof(SmelterExtensions.RPC_SetFuelLevelMax));
+              if (Main.Instance.EnableTrace) Log.Trace(Main.Instance, $"{Main.Namespace}.{MethodBase.GetCurrentMethod()?.DeclaringType?.Name}.{MethodBase.GetCurrentMethod()?.Name} [RPC_SetFuelLevelMax for {__instance.name}]");
+              ___m_nview.InvokeRPC($"{Main.Guid}_{nameof(SmelterExtensions.RPC_SetFuelLevelMax)}");
             }
             else
             {
+              if (Main.Instance.EnableTrace) Log.Trace(Main.Instance, $"{Main.Namespace}.{MethodBase.GetCurrentMethod()?.DeclaringType?.Name}.{MethodBase.GetCurrentMethod()?.Name} [RPC_AddFuel for {__instance.name}]");
               ___m_nview.InvokeRPC(nameof(Smelter.RPC_AddFuel));
             }
           }
@@ -449,7 +460,7 @@ namespace Digitalroot.Valheim.EternalFire
       {
         try
         {
-          Log.Trace(Main.Instance, $"{Main.Namespace}.{MethodBase.GetCurrentMethod()?.DeclaringType?.Name}.{MethodBase.GetCurrentMethod()?.Name}");
+          if (Main.Instance.EnableTrace) Log.Trace(Main.Instance, $"{Main.Namespace}.{MethodBase.GetCurrentMethod()?.DeclaringType?.Name}.{MethodBase.GetCurrentMethod()?.Name}");
           if (___m_nview == null || !___m_nview.IsValid()) return;
           if (__instance.IsEternal())
           {
@@ -466,7 +477,6 @@ namespace Digitalroot.Valheim.EternalFire
 
     #endregion
 
-
     #region ShieldGenerator
 
     [HarmonyPatch(typeof(ShieldGenerator))]
@@ -477,12 +487,12 @@ namespace Digitalroot.Valheim.EternalFire
       {
         try
         {
-          Log.Trace(Main.Instance, $"{Main.Namespace}.{MethodBase.GetCurrentMethod()?.DeclaringType?.Name}.{MethodBase.GetCurrentMethod()?.Name}");
+          if (Main.Instance.EnableTrace) Log.Trace(Main.Instance, $"{Main.Namespace}.{MethodBase.GetCurrentMethod()?.DeclaringType?.Name}.{MethodBase.GetCurrentMethod()?.Name}");
           if (___m_nview == null || !___m_nview.IsValid()) return;
-          ___m_nview.Register(nameof(SmelterExtensions.RPC_EnableEternal), __instance.RPC_EnableEternal);
-          ___m_nview.Register(nameof(SmelterExtensions.RPC_DisableEternal), __instance.RPC_DisableEternal);
-          ___m_nview.Register(nameof(SmelterExtensions.RPC_SetFuelLevelMax), __instance.RPC_SetFuelLevelMax);
-          __instance.SetIsEternal(__instance.IsEternal());
+          ___m_nview.Register($"{Main.Guid}_{nameof(ShieldGeneratorExtensions.RPC_EnableEternal)}", __instance.RPC_EnableEternal);
+          ___m_nview.Register($"{Main.Guid}_{nameof(ShieldGeneratorExtensions.RPC_DisableEternal)}", __instance.RPC_DisableEternal);
+          ___m_nview.Register($"{Main.Guid}_{nameof(ShieldGeneratorExtensions.RPC_SetFuelLevelMax)}", __instance.RPC_SetFuelLevelMax);
+          // __instance.SetIsEternal(__instance.IsEternal());
         }
         catch (Exception e)
         {
@@ -495,7 +505,7 @@ namespace Digitalroot.Valheim.EternalFire
       {
         try
         {
-          if (___m_nview == null || !___m_nview.IsValid() || __instance.m_fuelItems?.Count < 1) return;
+          if (___m_nview == null || !___m_nview.IsValid() || __instance.m_fuelItems == null || __instance.m_fuelItems.Count < 1f) return;
 
           if (!___m_nview.HasOwner())
           {
@@ -508,7 +518,7 @@ namespace Digitalroot.Valheim.EternalFire
             if (!__instance.IsEternal())
             {
               // Tell the owner to tag the ShieldGenerator as Eternal
-              ___m_nview.InvokeRPC(nameof(ShieldGeneratorExtensions.RPC_EnableEternal));
+              ___m_nview.InvokeRPC($"{Main.Guid}_{nameof(ShieldGeneratorExtensions.RPC_EnableEternal)}");
             }
           }
           else // The ShieldGenerator is disabled in the mod's config.
@@ -517,16 +527,29 @@ namespace Digitalroot.Valheim.EternalFire
             if (__instance.IsEternal())
             {
               // Tell the owner to untag the ShieldGenerator as Eternal
-              ___m_nview.InvokeRPC(nameof(ShieldGeneratorExtensions.RPC_DisableEternal));
+              ___m_nview.InvokeRPC($"{Main.Guid}_{nameof(ShieldGeneratorExtensions.RPC_DisableEternal)}");
             }
           }
 
           if (__instance.IsEternal() && __instance.GetFuel() <= __instance.m_maxFuel - 1)
           {
-            Log.Trace(Main.Instance, $"{Main.Namespace}.{MethodBase.GetCurrentMethod()?.DeclaringType?.Name}.{MethodBase.GetCurrentMethod()?.Name} [Adding Fuel for {__instance.name}]");
+            if (Main.Instance.EnableTrace)
+            {
+              Log.Trace(Main.Instance, $"{Main.Namespace}.{MethodBase.GetCurrentMethod()?.DeclaringType?.Name}.{MethodBase.GetCurrentMethod()?.Name} [Adding Fuel for {__instance.name}]");
+              Log.Trace(Main.Instance, $"{Main.Namespace}.{MethodBase.GetCurrentMethod()?.DeclaringType?.Name}.{MethodBase.GetCurrentMethod()?.Name} [__instance.GetFuel() : {__instance.GetFuel()}]");
+            }
 
             // Tell the owner to add fuel to the ShieldGenerator
-            __instance.SetFuel(__instance.m_maxFuel); // This calls RPC_SetFuel
+            if (Main.IsVpcInstalled)
+            {
+              if (Main.Instance.EnableTrace) Log.Trace(Main.Instance, $"{Main.Namespace}.{MethodBase.GetCurrentMethod()?.DeclaringType?.Name}.{MethodBase.GetCurrentMethod()?.Name} [RPC_SetFuelLevelMax for {__instance.name}]");
+              ___m_nview.InvokeRPC($"{Main.Guid}_{nameof(ShieldGeneratorExtensions.RPC_SetFuelLevelMax)}");
+            }
+            else
+            {
+              if (Main.Instance.EnableTrace) Log.Trace(Main.Instance, $"{Main.Namespace}.{MethodBase.GetCurrentMethod()?.DeclaringType?.Name}.{MethodBase.GetCurrentMethod()?.Name} [RPC_SetFuel for {__instance.name}]");
+              __instance.SetFuel(__instance.m_maxFuel); // This calls RPC_SetFuel
+            }
           }
         }
         catch (Exception e)
@@ -629,17 +652,22 @@ namespace Digitalroot.Valheim.EternalFire
         if (fireplace.m_nview == null
             || !fireplace.m_nview.IsValid()
             || !fireplace.m_nview.IsOwner()
-            || (fireplace.IsEternal() && fireplace.m_infiniteFuel)
             || !Main.ConfigCheck(fireplace.name))
         {
           return;
         }
 
-        Log.Trace(Main.Instance, $"{Main.Namespace}.{MethodBase.GetCurrentMethod()?.DeclaringType?.Name}.{MethodBase.GetCurrentMethod()?.Name}");
+        if (Main.Instance.EnableTrace) Log.Trace(Main.Instance, $"{Main.Namespace}.{MethodBase.GetCurrentMethod()?.DeclaringType?.Name}.{MethodBase.GetCurrentMethod()?.Name}");
+
+        var eternal = fireplace.IsEternal(); // Does owner already think it's eternal?
         fireplace.SetIsEternal(true);
-        // Save the current fuel level so we can restore it on disable.
-        fireplace.SetOriginalFuelLevel(fireplace.GetFuel());
-        fireplace.SetFuel(fireplace.m_maxFuel); // Force Max Fuel
+
+        if (!eternal) // Only save the current values if owner thinks the value is being toggled
+        {
+          // Save the current fuel level so owner can restore it on disable.
+          fireplace.SetOriginalFuelLevel(fireplace.GetFuel());
+          fireplace.SetFuel(fireplace.m_maxFuel); // Force Max Fuel  
+        }
       }
       catch (Exception e)
       {
@@ -660,16 +688,20 @@ namespace Digitalroot.Valheim.EternalFire
         if (fireplace.m_nview == null
             || !fireplace.m_nview.IsValid()
             || !fireplace.m_nview.IsOwner()
-            || (!fireplace.IsEternal() && !fireplace.m_infiniteFuel)
             || Main.ConfigCheck(fireplace.name))
         {
           return;
         }
 
-        Log.Trace(Main.Instance, $"{Main.Namespace}.{MethodBase.GetCurrentMethod()?.DeclaringType?.Name}.{MethodBase.GetCurrentMethod()?.Name}");
+        if (Main.Instance.EnableTrace) Log.Trace(Main.Instance, $"{Main.Namespace}.{MethodBase.GetCurrentMethod()?.DeclaringType?.Name}.{MethodBase.GetCurrentMethod()?.Name}");
+        var eternal = fireplace.IsEternal(); // Does owner already think it's eternal?
         fireplace.SetIsEternal(false);
-        fireplace.SetFuel(fireplace.GetOriginalFuelLevel() <= 1f ? 0f : fireplace.GetOriginalFuelLevel()); // Restore removed fuel
-        fireplace.SetOriginalFuelLevel(0f);                                                                // Reset 
+
+        if (eternal) // Only save the current values if owner thinks the value is being toggled
+        {
+          fireplace.SetFuel(fireplace.GetOriginalFuelLevel() <= 1f ? 0f : fireplace.GetOriginalFuelLevel()); // Restore removed fuel
+          fireplace.SetOriginalFuelLevel(0f);                                                                // Reset 
+        }
       }
       catch (Exception e)
       {
@@ -701,16 +733,37 @@ namespace Digitalroot.Valheim.EternalFire
     [UsedImplicitly]
     public static void SetIsEternal(this Fireplace fireplace, bool value)
     {
-      if (!fireplace.m_nview.IsValid()) return;
-      fireplace.m_nview.GetZDO().Set(Main.IsEternalKey, value);
-      fireplace.m_infiniteFuel = value;
+      try
+      {
+        if (Main.Instance.EnableTrace)
+        {
+          Log.Trace(Main.Instance, $"{Main.Namespace}.{MethodBase.GetCurrentMethod()?.DeclaringType?.Name}.{MethodBase.GetCurrentMethod()?.Name} [value: {value}]");
+          Log.Trace(Main.Instance, $"{Main.Namespace}.{MethodBase.GetCurrentMethod()?.DeclaringType?.Name}.{MethodBase.GetCurrentMethod()?.Name} [m_nview.IsValid: {fireplace.m_nview.IsValid()}]");
+          Log.Trace(Main.Instance, $"{Main.Namespace}.{MethodBase.GetCurrentMethod()?.DeclaringType?.Name}.{MethodBase.GetCurrentMethod()?.Name} [m_nview.IsOwner: {fireplace.m_nview.IsOwner()}]");
+        }
+
+        if (!fireplace.m_nview.IsValid()) return;
+        if (fireplace.m_nview.IsOwner())
+        {
+          if (Main.Instance.EnableTrace) Log.Trace(Main.Instance, $"{Main.Namespace}.{MethodBase.GetCurrentMethod()?.DeclaringType?.Name}.{MethodBase.GetCurrentMethod()?.Name} [ZDO.Write(IsEternalKey): value = {value}]");
+          fireplace.m_nview.GetZDO().Set(Main.IsEternalKey, value);
+        }
+
+        // fireplace.m_infiniteFuel = value;
+      }
+      catch (Exception e)
+      {
+        Log.Error(Main.Instance, e);
+      }
     }
 
     [UsedImplicitly]
     public static bool GetIsEternal(this Fireplace fireplace)
     {
       if (!fireplace.m_nview.IsValid()) return false;
-      return fireplace.m_nview.GetZDO().GetBool(Main.IsEternalKey);
+      var result = fireplace.m_nview.GetZDO().GetBool(Main.IsEternalKey);
+      // Log.Trace(Main.Instance, $"{Main.Namespace}.{MethodBase.GetCurrentMethod()?.DeclaringType?.Name}.{MethodBase.GetCurrentMethod()?.Name} [ZDO.Read(IsEternalKey): result = {result}]");
+      return result;
     }
 
     [UsedImplicitly, Conditional("DEBUG")]
@@ -778,7 +831,7 @@ namespace Digitalroot.Valheim.EternalFire
           return;
         }
 
-        Log.Trace(Main.Instance, $"{Main.Namespace}.{MethodBase.GetCurrentMethod()?.DeclaringType?.Name}.{MethodBase.GetCurrentMethod()?.Name}");
+        if (Main.Instance.EnableTrace) Log.Trace(Main.Instance, $"{Main.Namespace}.{MethodBase.GetCurrentMethod()?.DeclaringType?.Name}.{MethodBase.GetCurrentMethod()?.Name}");
         // Save the current fuel level so we can restore it on disable.
         cookingStation.SetOriginalFuelLevel(cookingStation.GetFuel());
         cookingStation.SetIsEternal(true);
@@ -809,7 +862,7 @@ namespace Digitalroot.Valheim.EternalFire
           return;
         }
 
-        Log.Trace(Main.Instance, $"{Main.Namespace}.{MethodBase.GetCurrentMethod()?.DeclaringType?.Name}.{MethodBase.GetCurrentMethod()?.Name}");
+        if (Main.Instance.EnableTrace) Log.Trace(Main.Instance, $"{Main.Namespace}.{MethodBase.GetCurrentMethod()?.DeclaringType?.Name}.{MethodBase.GetCurrentMethod()?.Name}");
         cookingStation.SetIsEternal(false);
         cookingStation.SetFuel(cookingStation.GetOriginalFuelLevel() <= 1f ? 0f : cookingStation.GetOriginalFuelLevel()); // Restore removed fuel
         cookingStation.SetOriginalFuelLevel(0f);                                                                          // Reset 
@@ -839,7 +892,7 @@ namespace Digitalroot.Valheim.EternalFire
           return;
         }
 
-        Log.Trace(Main.Instance, $"{Main.Namespace}.{MethodBase.GetCurrentMethod()?.DeclaringType?.Name}.{MethodBase.GetCurrentMethod()?.Name}");
+        if (Main.Instance.EnableTrace) Log.Trace(Main.Instance, $"{Main.Namespace}.{MethodBase.GetCurrentMethod()?.DeclaringType?.Name}.{MethodBase.GetCurrentMethod()?.Name}");
         cookingStation.SetFuel(cookingStation.m_maxFuel);
       }
       catch (Exception e)
@@ -952,7 +1005,7 @@ namespace Digitalroot.Valheim.EternalFire
           return;
         }
 
-        Log.Trace(Main.Instance, $"{Main.Namespace}.{MethodBase.GetCurrentMethod()?.DeclaringType?.Name}.{MethodBase.GetCurrentMethod()?.Name}");
+        if (Main.Instance.EnableTrace) Log.Trace(Main.Instance, $"{Main.Namespace}.{MethodBase.GetCurrentMethod()?.DeclaringType?.Name}.{MethodBase.GetCurrentMethod()?.Name}");
         // Save the current fuel level so we can restore it on disable.
         smelter.SetOriginalFuelLevel(smelter.GetFuel());
         smelter.SetIsEternal(true);
@@ -983,7 +1036,7 @@ namespace Digitalroot.Valheim.EternalFire
           return;
         }
 
-        Log.Trace(Main.Instance, $"{Main.Namespace}.{MethodBase.GetCurrentMethod()?.DeclaringType?.Name}.{MethodBase.GetCurrentMethod()?.Name}");
+        if (Main.Instance.EnableTrace) Log.Trace(Main.Instance, $"{Main.Namespace}.{MethodBase.GetCurrentMethod()?.DeclaringType?.Name}.{MethodBase.GetCurrentMethod()?.Name}");
         smelter.SetIsEternal(false);
         smelter.SetFuel(smelter.GetOriginalFuelLevel() <= 1f ? 0f : smelter.GetOriginalFuelLevel());
         smelter.SetOriginalFuelLevel(0f);
@@ -1008,7 +1061,7 @@ namespace Digitalroot.Valheim.EternalFire
           return;
         }
 
-        Log.Trace(Main.Instance, $"{Main.Namespace}.{MethodBase.GetCurrentMethod()?.DeclaringType?.Name}.{MethodBase.GetCurrentMethod()?.Name}");
+        if (Main.Instance.EnableTrace) Log.Trace(Main.Instance, $"{Main.Namespace}.{MethodBase.GetCurrentMethod()?.DeclaringType?.Name}.{MethodBase.GetCurrentMethod()?.Name}");
         smelter.SetFuel(smelter.m_maxFuel);
       }
       catch (Exception e)
@@ -1121,7 +1174,7 @@ namespace Digitalroot.Valheim.EternalFire
           return;
         }
 
-        Log.Trace(Main.Instance, $"{Main.Namespace}.{MethodBase.GetCurrentMethod()?.DeclaringType?.Name}.{MethodBase.GetCurrentMethod()?.Name}");
+        if (Main.Instance.EnableTrace) Log.Trace(Main.Instance, $"{Main.Namespace}.{MethodBase.GetCurrentMethod()?.DeclaringType?.Name}.{MethodBase.GetCurrentMethod()?.Name}");
         // Save the current fuel level so we can restore it on disable.
         shieldGenerator.SetOriginalFuelLevel(shieldGenerator.GetFuel());
         shieldGenerator.SetIsEternal(true);
@@ -1152,7 +1205,7 @@ namespace Digitalroot.Valheim.EternalFire
           return;
         }
 
-        Log.Trace(Main.Instance, $"{Main.Namespace}.{MethodBase.GetCurrentMethod()?.DeclaringType?.Name}.{MethodBase.GetCurrentMethod()?.Name}");
+        if (Main.Instance.EnableTrace) Log.Trace(Main.Instance, $"{Main.Namespace}.{MethodBase.GetCurrentMethod()?.DeclaringType?.Name}.{MethodBase.GetCurrentMethod()?.Name}");
         shieldGenerator.SetIsEternal(false);
         shieldGenerator.SetFuel(shieldGenerator.GetOriginalFuelLevel() <= 1f ? 0f : shieldGenerator.GetOriginalFuelLevel());
         shieldGenerator.SetOriginalFuelLevel(0f);
@@ -1177,7 +1230,7 @@ namespace Digitalroot.Valheim.EternalFire
           return;
         }
 
-        Log.Trace(Main.Instance, $"{Main.Namespace}.{MethodBase.GetCurrentMethod()?.DeclaringType?.Name}.{MethodBase.GetCurrentMethod()?.Name}");
+        if (Main.Instance.EnableTrace) Log.Trace(Main.Instance, $"{Main.Namespace}.{MethodBase.GetCurrentMethod()?.DeclaringType?.Name}.{MethodBase.GetCurrentMethod()?.Name}");
         shieldGenerator.SetFuel(shieldGenerator.m_maxFuel);
       }
       catch (Exception e)

@@ -1,3 +1,13 @@
+## v1.1.9
+- Fixed multiplayer bugs. 
+- `Eternal` hovertext should display for all players with **EternalFire** installed.
+- Fixed typos in `RCP_AddFuel` method names.
+- Fixed refueling calculation.
+- Cached settings values.
+- Hooked into `OnConfigurationSynchronized`
+- Hooked into `SettingsChanged` on configs.
+- Reduced RPC calls 
+
 ## v1.1.8
 - Added support for the `ShieldGenerator`
 
